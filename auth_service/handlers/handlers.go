@@ -120,11 +120,17 @@ func DeleteUserHandler(c *gin.Context) {
         return
     }
 
-    // Delete the user.
+    // Soft delete the user .
     if err := database.DB.Delete(&user).Error; err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
         return
     }
+
+    // Permanently delete the user to clear the unique constraint.
+    // if err := database.DB.Unscoped().Delete(&user).Error; err != nil {
+    //     c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
+    //     return
+    // }
 
     c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }

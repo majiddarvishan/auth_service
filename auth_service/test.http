@@ -23,7 +23,7 @@ Content-Type: application/json
 ###
 
 DELETE http://localhost:8080/user/demo
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3ODg5MzcsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.16Ke962JfGhNX17UdIZa8nH1Jbg3XutR52dvmiAsCAE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4MDk4NjgsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.asL8oU693UH-J6suHM8gXeg17bRx1yEnICrrmy7MlX8
 
 ###
 
