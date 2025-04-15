@@ -134,3 +134,47 @@ func DeleteUserHandler(c *gin.Context) {
 
     c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
+
+// UpdateUserRoleHandler allows an admin to update a user's role.
+// It expects a JSON payload with the new role.
+func UpdateUserRoleHandler(c *gin.Context) {
+    // Get the username from the URL parameter.
+    username := c.Param("username")
+    if username == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
+        return
+    }
+
+    // Define the expected request format.
+    type RoleUpdateRequest struct {
+        Role string `json:"role"`
+    }
+
+    var req RoleUpdateRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
+        return
+    }
+
+    if req.Role == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Role is required"})
+        return
+    }
+
+    // Find user by username.
+    var user database.User
+    if err := database.DB.Where("username = ?", username).First(&user).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        return
+    }
+
+    // Update the user's role.
+    user.Role = req.Role
+
+    if err := database.DB.Save(&user).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role", "details": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
+}

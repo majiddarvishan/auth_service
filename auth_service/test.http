@@ -63,3 +63,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3ODg5M
 
 ###
 
+### Update User Role (Admin Only)
+PUT http://localhost:8080/user/demo/role
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3ODg5MzcsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.16Ke962JfGhNX17UdIZa8nH1Jbg3XutR52dvmiAsCAE
+
+{
+  "role": "editor"
+}

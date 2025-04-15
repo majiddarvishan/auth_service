@@ -8,23 +8,28 @@ import (
     "github.com/gin-gonic/gin"
 )
 
-// SetupRoutes configures and returns the Gin engine with all routes defined.
 func SetupRoutes() *gin.Engine {
     r := gin.Default()
 
     // PUBLIC ROUTES:
-    // Registration and login endpoints.
     r.POST("/register", handlers.RegisterHandler)
     r.POST("/login", handlers.LoginHandler)
 
-    // DELETE User Endpoint: only admins can delete users.
+    // DELETE User Endpoint: Only admins can delete users.
     r.DELETE("/user/:username",
         middleware.AuthMiddleware,
         middleware.RoleMiddleware("admin"),
         handlers.DeleteUserHandler,
     )
 
-    // Example Admin-only Endpoint.
+    // NEW: Update user role endpoint (admin only).
+    r.PUT("/user/:username/role",
+        middleware.AuthMiddleware,
+        middleware.RoleMiddleware("admin"),
+        handlers.UpdateUserRoleHandler,
+    )
+
+    // Example: Admin-only endpoint.
     r.GET("/admin",
         middleware.AuthMiddleware,
         middleware.RoleMiddleware("admin"),
@@ -34,12 +39,10 @@ func SetupRoutes() *gin.Engine {
     )
 
     // PROTECTED ROUTES:
-    // Create a separate Gin engine for protected routes that require JWT validation.
     protected := gin.New()
     protected.Use(middleware.AuthMiddleware)
-    // Catch-all route: forward any unmatched request to your Final-Service.
+    // Catch-all route to forward unmatched requests to the Final-Service.
     protected.Any("/*path", proxy.ProxyRequest)
-    // Delegate any unmatched routes from the main router to the protected engine.
     r.NoRoute(func(c *gin.Context) {
         protected.HandleContext(c)
     })
