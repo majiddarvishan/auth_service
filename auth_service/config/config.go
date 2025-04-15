@@ -8,12 +8,16 @@ import (
 )
 
 var (
-    SecretKey   string
+    // SecretKey is used for signing JWT tokens.
+    SecretKey string
+
+    // DatabaseURL is the DSN for connecting to your PostgreSQL (or MySQL) database.
     DatabaseURL string
 )
 
+// LoadConfig loads environment variables from a .env file.
 func LoadConfig() {
-    // Load environment variables from .env file
+    // Load .env file (log fatal if not found).
     if err := godotenv.Load(); err != nil {
         log.Fatal("Error loading .env file")
     }

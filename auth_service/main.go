@@ -1,43 +1,53 @@
 package main
 
 import (
-    "auth_service/config"
-    "auth_service/database"
-    "auth_service/handlers"
-    "auth_service/middleware"
-    "auth_service/proxy"
+	"auth_service/config"
+	"auth_service/database"
+	"auth_service/handlers"
+	"auth_service/middleware"
+	"auth_service/proxy"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-    // Load configuration from .env
-    config.LoadConfig()
+	// Load configuration variables.
+	config.LoadConfig()
 
-    // Initialize the database connection
-    database.InitDB()
+	// Initialize the database.
+	database.InitDB()
 
-    // Create the main Gin router.
-    r := gin.Default()
+	// Create the main Gin router.
+	r := gin.Default()
 
-    // PUBLIC ROUTES: Register and Login endpoints.
-    r.POST("/register", handlers.RegisterHandler)
-    r.POST("/login", handlers.LoginHandler)
+	// PUBLIC ROUTES: register and login.
+	r.POST("/register", handlers.RegisterHandler)
+	r.POST("/login", handlers.LoginHandler)
 
-    // PROTECTED ROUTES:
-    // Create a separate Gin engine for protected routes,
-    // so we avoid conflicts with the public routes.
-    protected := gin.New()
-    protected.Use(middleware.AuthMiddleware)
-    // Use a catch-all route to forward any unmatched request to the Final-Service.
-    protected.Any("/*path", proxy.ProxyToFinalService)
+    // ----------------------------
+    // NEW: DELETE USER ENDPOINT
+    // Only an authenticated user with the "admin" role can delete a user.
+    r.DELETE("/user/:username", middleware.AuthMiddleware, middleware.RoleMiddleware("admin"), handlers.DeleteUserHandler)
+    // ----------------------------
 
-    // For any request not caught by public routes,
-    // use the NoRoute handler to delegate to the protected engine.
-    r.NoRoute(func(c *gin.Context) {
-        protected.HandleContext(c)
-    })
+	// Example: an admin-only public endpoint.
+	// This route is protected both by the AuthMiddleware and a role check.
+	r.GET("/admin", middleware.AuthMiddleware, middleware.RoleMiddleware("admin"), func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "Welcome, Admin!"})
+	})
 
-    // Run the Auth-Service on port 8080
-    r.Run(":8080")
+	// PROTECTED ROUTES:
+	// Create a separate Gin engine for protected routes.
+	protected := gin.New()
+	protected.Use(middleware.AuthMiddleware)
+	// Catch-all route: forward any unmatched URL to the Final-Service.
+	protected.Any("/*path", proxy.ProxyRequest)
+
+	// Delegate any request not matched above to the protected engine.
+	r.NoRoute(func(c *gin.Context) {
+		protected.HandleContext(c)
+	})
+
+	// Run the Auth-Service on port 8080.
+	r.Run(":8080")
 }

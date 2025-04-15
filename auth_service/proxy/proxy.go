@@ -8,17 +8,17 @@ import (
     "github.com/gin-gonic/gin"
 )
 
-// ProxyToFinalService forwards a request to the Final-Service.
-func ProxyToFinalService(c *gin.Context) {
-    finalServiceURL := "http://localhost:8081" // Change this URL if your Final-Service is hosted elsewhere.
+// ProxyRequest forwards the incoming request to the Final-Service.
+func ProxyRequest(c *gin.Context) {
+    finalServiceURL := "http://localhost:8081" // Adjust if needed.
     remote, err := url.Parse(finalServiceURL)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid Final-Service URL"})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid final service URL"})
         return
     }
 
     proxy := httputil.NewSingleHostReverseProxy(remote)
-    // Update the request's Host header to match the final service.
+    // Update the Host header so the final service correctly receives the request.
     c.Request.Host = remote.Host
     proxy.ServeHTTP(c.Writer, c.Request)
 }
