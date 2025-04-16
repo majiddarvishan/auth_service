@@ -14,22 +14,25 @@ func SetupRoutes() *gin.Engine {
     // PUBLIC ROUTES:
     r.POST("/register", handlers.RegisterHandler)
     r.POST("/login", handlers.LoginHandler)
-
-    // DELETE User Endpoint: Only admins can delete users.
     r.DELETE("/user/:username",
         middleware.AuthMiddleware,
         middleware.RoleMiddleware("admin"),
         handlers.DeleteUserHandler,
     )
-
-    // NEW: Update user role endpoint (admin only).
     r.PUT("/user/:username/role",
         middleware.AuthMiddleware,
         middleware.RoleMiddleware("admin"),
         handlers.UpdateUserRoleHandler,
     )
 
-    // Example: Admin-only endpoint.
+    // NEW: Route for creating new roles (admin only):
+    r.POST("/roles",
+        middleware.AuthMiddleware,
+        middleware.RoleMiddleware("admin"),
+        handlers.CreateRoleHandler,
+    )
+
+    // Example: An admin-only endpoint.
     r.GET("/admin",
         middleware.AuthMiddleware,
         middleware.RoleMiddleware("admin"),
@@ -41,7 +44,7 @@ func SetupRoutes() *gin.Engine {
     // PROTECTED ROUTES:
     protected := gin.New()
     protected.Use(middleware.AuthMiddleware)
-    // Catch-all route to forward unmatched requests to the Final-Service.
+    // Catch-all route: forward any unmatched requests to the Final-Service.
     protected.Any("/*path", proxy.ProxyRequest)
     r.NoRoute(func(c *gin.Context) {
         protected.HandleContext(c)

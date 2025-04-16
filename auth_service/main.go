@@ -7,13 +7,13 @@ import (
 )
 
 func main() {
-    // Load configuration from .env file.
+    // Load configuration from .env.
     config.LoadConfig()
 
-    // Initialize the database (making your models ready).
+    // Initialize the database.
     database.InitDB()
 
-    // Set up routes.
+    // Setup routes.
     r := routes.SetupRoutes()
 
     // Run the server on port 8080.
