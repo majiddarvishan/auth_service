@@ -7,7 +7,8 @@ const NewRoleForm = () => {
   const handleCreateRole = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
+      // POST to the backend endpoint (adjust the URL if needed)
+      const response = await axios.post(
         "http://localhost:8080/roles",
         roleData,
         {
@@ -15,18 +16,19 @@ const NewRoleForm = () => {
         }
       );
       alert(`New role "${roleData.name}" created successfully!`);
-      setRoleData({ name: "", description: "" }); // Reset form
+      setRoleData({ name: "", description: "" }); // Clear the form
     } catch (error) {
+      console.error(error);
       alert("Failed to create role");
     }
   };
 
   return (
-    <div className="container mt-4">
-      <h3>Create a New Role</h3>
+    <div className="mt-5">
+      <h3>Define New Role</h3>
       <form onSubmit={handleCreateRole}>
-        <div className="form-group">
-          <label>Role Name</label>
+        <div className="mb-3">
+          <label className="form-label">Role Name</label>
           <input
             type="text"
             className="form-control"
@@ -38,8 +40,8 @@ const NewRoleForm = () => {
             required
           />
         </div>
-        <div className="form-group mt-2">
-          <label>Description</label>
+        <div className="mb-3">
+          <label className="form-label">Description</label>
           <textarea
             className="form-control"
             placeholder="Enter role description"
@@ -50,7 +52,7 @@ const NewRoleForm = () => {
             required
           />
         </div>
-        <button type="submit" className="btn btn-success mt-3">
+        <button type="submit" className="btn btn-success">
           Create Role
         </button>
       </form>

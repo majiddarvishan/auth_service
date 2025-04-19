@@ -3,19 +3,20 @@ import axios from "axios";
 import NewRoleForm from "../components/Admin/NewRoleForm";
 
 const AdminDashboard = () => {
+  // State to store users, roles and form selections.
   const [users, setUsers] = useState([]);
   const [availableRoles, setAvailableRoles] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [newRole, setNewRole] = useState("");
 
-  // Fetch users and available roles once when the component mounts.
+  // Fetch the list of users and roles when the component mounts.
   useEffect(() => {
     async function fetchUsers() {
       try {
         const response = await axios.get("http://localhost:8080/admin", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-        // Response should have a "users" key that is an array of objects containing at least { username, role }
+        // Expecting response.data.users to be an array of objects with at least { username, role }
         setUsers(response.data.users);
       } catch (error) {
         alert("Failed to load users");
@@ -27,7 +28,7 @@ const AdminDashboard = () => {
         const response = await axios.get("http://localhost:8080/roles", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-        // Expecting response.data.roles as an array of role objects, e.g., { ID, Name, Description }
+        // Expecting response.data.roles to be an array of role objects, e.g., { ID, Name, Description }
         setAvailableRoles(response.data.roles);
       } catch (error) {
         alert("Failed to load roles");
@@ -44,7 +45,6 @@ const AdminDashboard = () => {
       return;
     }
     try {
-      // Update the user's role by sending a PUT request to the backend.
       await axios.put(
         `http://localhost:8080/user/${selectedUser}/role`,
         { role: newRole },
@@ -53,7 +53,6 @@ const AdminDashboard = () => {
         }
       );
       alert(`Role updated for ${selectedUser} to ${newRole}`);
-      // Update the local user list optionally or refresh the data.
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.username === selectedUser ? { ...user, role: newRole } : user
@@ -68,6 +67,7 @@ const AdminDashboard = () => {
     <div className="container">
       <h2>Admin Dashboard</h2>
 
+      {/* Users List */}
       <h3>User List</h3>
       <table className="table table-bordered">
         <thead>
@@ -86,6 +86,7 @@ const AdminDashboard = () => {
         </tbody>
       </table>
 
+      {/* Update User Role Section */}
       <h3>Update User Role</h3>
       <div className="mb-3">
         <label className="form-label">Select User:</label>
@@ -125,10 +126,8 @@ const AdminDashboard = () => {
         Update Role
       </button>
 
-      <div className="container">
-        <h2>Admin Dashboard</h2>
-        <NewRoleForm />
-      </div>
+      {/* New Role Definition Section */}
+      <NewRoleForm />
     </div>
   );
 };
