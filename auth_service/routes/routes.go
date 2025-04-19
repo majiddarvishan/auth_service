@@ -44,15 +44,25 @@ func SetupRoutes() *gin.Engine {
 		handlers.CreateOrUpdateAccountingRuleHandler,
 	)
 
+    // SMS endpoints group: any request starting with "/sms/"
+    // This group uses the standard authentication and dynamic accounting middleware,
+    // and then uses a specialized proxy handler (SMSProxyRequest) to forward the request
+    // to the final endpoint.
+    r.Any("/sms/*path",
+        middleware.AuthMiddleware,
+        middleware.DynamicAccountingMiddleware,
+        proxy.SMSProxyRequest,
+    )
+
     // Fallback route:
     // Use NoRoute to catch any requests that did not match the above routes.
     // This chain enforces that the request must be authenticated,
     // checked against an accounting rule, and then forwarded to the final component.
-    r.NoRoute(
-        middleware.AuthMiddleware,              // Ensures a valid JWT is present.
-        middleware.DynamicAccountingMiddleware, // Checks and deducts balance based on the rule.
-        proxy.ProxyRequest,                     // Forwards the request to the final component.
-    )
+    // r.NoRoute(
+    //     middleware.AuthMiddleware,              // Ensures a valid JWT is present.
+    //     middleware.DynamicAccountingMiddleware, // Checks and deducts balance based on the rule.
+    //     proxy.ProxyRequest,                     // Forwards the request to the final component.
+    // )
 
     // (Optional) You can also add specific endpoints that require dynamic billing.
     // For example:
