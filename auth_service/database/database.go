@@ -23,8 +23,8 @@ type User struct {
     Username string   `gorm:"uniqueIndex"`
     Password string
     Role     string   // Optional if you want a backup or quick check.
-    RoleID   uint     // Foreign key to the Role table.
-    RoleInfo Role     `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+    // RoleID   uint     // Foreign key to the Role table.
+    // RoleInfo Role     `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
     Balance  float64  `gorm:"default:0"`
 }
 
@@ -36,6 +36,13 @@ type Transaction struct {
     Endpoint  string // Tracks which endpoint triggered the charge
 }
 
+// AccountingRule defines which endpoints require a balance check and how much should be deducted.
+type AccountingRule struct {
+    gorm.Model
+    Endpoint  string  `gorm:"uniqueIndex;not null"` // e.g., "/sms", "/premium_data"
+    Charge    float64 `gorm:"not null"`             // Amount to charge when accessing this endpoint
+}
+
 // InitDB initializes the database and performs migrations.
 func InitDB() {
     var err error
@@ -45,7 +52,7 @@ func InitDB() {
     }
 
     // Auto-migrate models.
-    if err := DB.AutoMigrate(&User{}, &Role{}, &Transaction{}); err != nil {
+    if err := DB.AutoMigrate(&User{}, &Role{}, &Transaction{}, &AccountingRule{}); err != nil {
         log.Fatal("Failed to auto migrate database:", err)
     }
 }

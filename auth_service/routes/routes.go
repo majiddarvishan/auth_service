@@ -1,77 +1,114 @@
 package routes
 
 import (
-    "auth_service/handlers"
-    "auth_service/middleware"
-    "auth_service/proxy"
+	"auth_service/handlers"
+	"auth_service/middleware"
+	"auth_service/proxy"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 // SetupRoutes configures and returns the Gin engine.
 func SetupRoutes() *gin.Engine {
-    r := gin.Default()
+	r := gin.Default()
 
-    // PUBLIC ROUTES:
-    r.POST("/register", handlers.RegisterHandler)
-    r.POST("/login", handlers.LoginHandler)
+	// PUBLIC ROUTES:
+	r.POST("/register", handlers.RegisterHandler)
+	r.POST("/login", handlers.LoginHandler)
 
-    // DELETE User Endpoint (Admin Only)
-    r.DELETE("/user/:username",
-        middleware.AuthMiddleware,
-        middleware.RoleMiddleware("admin"),
-        handlers.DeleteUserHandler,
+	// DELETE User Endpoint (Admin Only)
+	r.DELETE("/user/:username",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.DeleteUserHandler,
+	)
+
+	// Update User Role (Admin Only)
+	r.PUT("/user/:username/role",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.UpdateUserRoleHandler,
+	)
+
+	// Create New Role (Admin Only)
+	r.POST("/roles",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.CreateRoleHandler,
+	)
+
+	// Create or Update Accounting Rules (Admin Only)
+	r.POST("/accounting_rules",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.CreateOrUpdateAccountingRuleHandler,
+	)
+
+    // Fallback route:
+    // Use NoRoute to catch any requests that did not match the above routes.
+    // This chain enforces that the request must be authenticated,
+    // checked against an accounting rule, and then forwarded to the final component.
+    r.NoRoute(
+        middleware.AuthMiddleware,              // Ensures a valid JWT is present.
+        middleware.DynamicAccountingMiddleware, // Checks and deducts balance based on the rule.
+        proxy.ProxyRequest,                     // Forwards the request to the final component.
     )
 
-    // Update User Role (Admin Only)
-    r.PUT("/user/:username/role",
-        middleware.AuthMiddleware,
-        middleware.RoleMiddleware("admin"),
-        handlers.UpdateUserRoleHandler,
-    )
+    // (Optional) You can also add specific endpoints that require dynamic billing.
+    // For example:
+    // r.GET("/premium_data",
+    //  middleware.AuthMiddleware,
+    //  middleware.DynamicAccountingMiddleware,
+    //  func(c *gin.Context) {
+    //      c.JSON(http.StatusOK, gin.H{"message": "Premium data accessed"})
+    //  },
+    // )
 
-    // Create New Role (Admin Only)
-    r.POST("/roles",
-        middleware.AuthMiddleware,
-        middleware.RoleMiddleware("admin"),
-        handlers.CreateRoleHandler,
-    )
+	// SMS endpoint: check balance and, if sufficient, forward the request to the final component.
+	// Note: We are reusing the generic proxy handler and not hardcoding any SMS logic.
+	// r.POST("/sms",
+	// 	middleware.AuthMiddleware,
+	// 	middleware.ChargeUserMiddleware(5), // Charge $5 for sending an SMS
+	// 	proxy.ProxyRequest,                 // Forwards the entire request to config.FinalEndpoint (e.g. http://localhost:8081)
+	// )
 
-    // Premium endpoint example with accounting middleware.
-    r.GET("/premium_data",
-        middleware.AuthMiddleware,
-        middleware.ChargeUserMiddleware(10), // Charge $10 for premium data access
-        func(c *gin.Context) {
-            c.JSON(200, gin.H{"message": "Premium data accessed"})
-        },
-    )
+	// Example Admin-only endpoint.
+	// r.GET("/admin",
+	// 	middleware.AuthMiddleware,
+	// 	middleware.RoleMiddleware("admin"),
+	// 	func(c *gin.Context) {
+	// 		c.JSON(200, gin.H{"message": "Welcome, Admin!"})
+	// 	},
+	// )
 
-    // SMS endpoint: check balance and, if sufficient, forward the request to the final component.
-    // Note: We are reusing the generic proxy handler and not hardcoding any SMS logic.
-    r.POST("/sms",
-        middleware.AuthMiddleware,
-        middleware.ChargeUserMiddleware(5), // Charge $5 for sending an SMS
-        proxy.ProxyRequest, // Forwards the entire request to config.FinalEndpoint (e.g. http://localhost:8081)
-    )
+    // Global Dynamic Accounting Middleware:
+    // This middleware checks for the existence of an accounting rule for the incoming path.
+    // If a rule exists, it will verify that the user's balance is sufficient and deduct the charge.
+    // Otherwise, it will simply let the request pass.
+    // r.Use(middleware.DynamicAccountingMiddleware)
+    // r.Use(middleware.DynamicAccountingMiddleware)
 
-    // Example Admin-only endpoint.
-    r.GET("/admin",
-        middleware.AuthMiddleware,
-        middleware.RoleMiddleware("admin"),
-        func(c *gin.Context) {
-            c.JSON(200, gin.H{"message": "Welcome, Admin!"})
-        },
-    )
+    // IMPORTANT: The endpoint below must be protected by AuthMiddleware so token claims are set.
+    // Here, the request first runs through AuthMiddleware, then DynamicAccountingMiddleware,
+    // and finally is forwarded via the generic proxy handler.
+    // r.Use(
+    //     middleware.AuthMiddleware,               // Decodes the JWT and sets claims in context.
+    //     middleware.DynamicAccountingMiddleware,  // Now the token claims are found!
+    //     proxy.ProxyRequest,                      // Forwards the request to the final component.
+    // )
 
-    // PROTECTED ROUTES:
-    // Create a separate engine for protected routes.
-    protected := gin.New()
-    protected.Use(middleware.AuthMiddleware)
-    // Catch-all route: forward any unmatched requests to the final component.
-    protected.Any("/*path", proxy.ProxyRequest)
-    r.NoRoute(func(c *gin.Context) {
-        protected.HandleContext(c)
-    })
+    // Fallback: all other routes are forwarded to the final component.
+    // r.Any("/*path", proxy.ProxyRequest)
 
-    return r
+	// PROTECTED ROUTES:
+	// Create a separate engine for protected routes.
+	// protected := gin.New()
+	// protected.Use(middleware.AuthMiddleware)
+	// // Catch-all route: forward any unmatched requests to the final component.
+	// protected.Any("/*path", proxy.ProxyRequest)
+	// r.NoRoute(func(c *gin.Context) {
+	// 	protected.HandleContext(c)
+	// })
+
+	return r
 }

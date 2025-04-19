@@ -15,7 +15,7 @@ POST http://localhost:8080/register
 Content-Type: application/json
 
 {
-  "username": "demo",
+  "username": "demo1",
   "password": "demo123",
   "role": "guest"
 }
@@ -23,7 +23,7 @@ Content-Type: application/json
 ###
 
 DELETE http://localhost:8080/user/demo
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4MDk4NjgsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.asL8oU693UH-J6suHM8gXeg17bRx1yEnICrrmy7MlX8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDUxMzEwNzIsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.QIVY13wgBu93eYIh1RXPFrKlG2H3tN9cxZXpZyiceSg
 
 ###
 
@@ -36,6 +36,16 @@ Content-Type: application/json
   "password": "password"
 }
 
+
+### Test the Auth Service Login Endpoint (Generate JWT Token)
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+  "username": "demo1",
+  "password": "demo123"
+}
+
 ###
 
 # Test the Auth Service Home Endpoint (Protected)
@@ -46,7 +56,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3ODg5M
 
 # Test the Auth Service Send SMS Endpoint (Protected)
 POST http://localhost:8080/sendsms
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3ODg5MzcsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.16Ke962JfGhNX17UdIZa8nH1Jbg3XutR52dvmiAsCAE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDUxMzE2MjcsInJvbGUiOiJndWVzdCIsInN1YiI6ImRlbW8xIn0.AwZ297d4LoCZlg4XdQKY3T9GEOWnkKf_CXkDmq6O6J4
 Content-Type: application/json
 
 {
@@ -87,4 +97,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4OTYwN
 
 ### Test SMS Charging
 POST http://localhost:8080/sms
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ4OTYwNTEsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.aC5tX1j_tegUmYxD7V52-zLYIVbHpMtxofGBh2TTFhQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDUxMzE2MjcsInJvbGUiOiJndWVzdCIsInN1YiI6ImRlbW8xIn0.AwZ297d4LoCZlg4XdQKY3T9GEOWnkKf_CXkDmq6O6J4
+
+### Define an Accounting Rule (Admin Only)
+POST http://localhost:8080/accounting_rules
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDUxMzE1ODMsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.EJLxsIFx04M9NcnukElH2WSd3LnV1rV8mSaN_kzaibI
+
+{
+  "endpoint": "/sendsms",
+  "charge": 5
+}
