@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 
 const Register = () => {
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ username: "", password: "", role: "user" });
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -30,6 +30,16 @@ const Register = () => {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
+
+        {/* Role Dropdown */}
+        <select
+          value={form.role}
+          onChange={(e) => setForm({ ...form, role: e.target.value })}
+        >
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+
         <button type="submit" className="btn btn-success">Register</button>
       </form>
     </div>
