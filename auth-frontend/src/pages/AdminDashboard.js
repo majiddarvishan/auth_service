@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+import NewRoleForm from "../components/Admin/NewRoleForm";
+
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
@@ -72,6 +74,11 @@ const AdminDashboard = () => {
         <button className="btn btn-primary" onClick={handleRoleChange}>
           Update Role
         </button>
+      </div>
+
+      <div className="container">
+        <h2>Admin Dashboard</h2>
+        <NewRoleForm />
       </div>
     </div>
   );
