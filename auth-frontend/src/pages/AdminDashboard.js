@@ -23,7 +23,7 @@ const AdminDashboard = () => {
       <h2>Admin Dashboard</h2>
       <ul>
         {users.map((user) => (
-          <li key={user.username}>{user.username} - {user.role}</li>
+          <li key={user.Username}>{user.Username} - {user.Role}</li>
         ))}
       </ul>
     </div>

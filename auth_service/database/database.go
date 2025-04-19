@@ -28,6 +28,13 @@ type User struct {
     Balance  float64  `gorm:"default:0"`
 }
 
+// AccountingRule defines which endpoints require a balance check and their charge.
+type AccountingRule struct {
+    gorm.Model
+    Endpoint string  `gorm:"uniqueIndex;not null"` // Example: "/sms", "/premium_data"
+    Charge   float64 `gorm:"not null"`             // Amount to charge when accessing this endpoint
+}
+
 // InitDB initializes the database and performs migrations.
 func InitDB() {
     var err error
@@ -37,7 +44,7 @@ func InitDB() {
     }
 
     // Auto-migrate models.
-    if err := DB.AutoMigrate(&User{}, &Role{}); err != nil {
+    if err := DB.AutoMigrate(&User{}, &Role{}, &AccountingRule{}); err != nil {
         log.Fatal("Failed to auto migrate database:", err)
     }
 }

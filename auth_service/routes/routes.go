@@ -34,6 +34,12 @@ func SetupRoutes() *gin.Engine {
 	r.POST("/register", handlers.RegisterHandler)
 	r.POST("/login", handlers.LoginHandler)
 
+	r.GET("/admin",
+		middleware.AuthMiddleware,          // Ensure user is authenticated.
+		middleware.RoleMiddleware("admin"), // Ensure only admins can access.
+		handlers.AdminDashboardHandler,
+	)
+
 	// DELETE User Endpoint (Admin Only)
 	r.DELETE("/user/:username",
 		middleware.AuthMiddleware,
