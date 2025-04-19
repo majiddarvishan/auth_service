@@ -3,7 +3,7 @@ package handlers
 import (
     "net/http"
 
-    "auth_service/database"
+    // "auth_service/database"
     "github.com/gin-gonic/gin"
 )
 
@@ -26,25 +26,25 @@ func CreateOrUpdateAccountingRuleHandler(c *gin.Context) {
     }
 
     // Find existing rule or create a new one.
-    var rule database.AccountingRule
-    if err := database.DB.Where("endpoint = ?", req.Endpoint).First(&rule).Error; err != nil {
-        // If the rule doesn't exist, create a new one.
-        rule = database.AccountingRule{
-            Endpoint: req.Endpoint,
-            Charge:   req.Charge,
-        }
-        if err := database.DB.Create(&rule).Error; err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create accounting rule", "details": err.Error()})
-            return
-        }
-    } else {
-        // Update existing rule.
-        rule.Charge = req.Charge
-        if err := database.DB.Save(&rule).Error; err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not update accounting rule", "details": err.Error()})
-            return
-        }
-    }
+    // var rule database.AccountingRule
+    // if err := database.DB.Where("endpoint = ?", req.Endpoint).First(&rule).Error; err != nil {
+    //     // If the rule doesn't exist, create a new one.
+    //     rule = database.AccountingRule{
+    //         Endpoint: req.Endpoint,
+    //         Charge:   req.Charge,
+    //     }
+    //     if err := database.DB.Create(&rule).Error; err != nil {
+    //         c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create accounting rule", "details": err.Error()})
+    //         return
+    //     }
+    // } else {
+    //     // Update existing rule.
+    //     rule.Charge = req.Charge
+    //     if err := database.DB.Save(&rule).Error; err != nil {
+    //         c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not update accounting rule", "details": err.Error()})
+    //         return
+    //     }
+    // }
 
-    c.JSON(http.StatusOK, gin.H{"message": "Accounting rule saved successfully", "rule": rule})
+    // c.JSON(http.StatusOK, gin.H{"message": "Accounting rule saved successfully", "rule": rule})
 }

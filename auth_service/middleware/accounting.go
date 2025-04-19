@@ -66,35 +66,31 @@
 package middleware
 
 import (
+    "bytes"
+    "encoding/json"
     "net/http"
 
-    "auth_service/database"
+    "auth_service/config"
     "github.com/gin-gonic/gin"
     "github.com/golang-jwt/jwt/v5"
 )
 
-// DynamicAccountingMiddleware dynamically checks for an accounting rule for the current endpoint.
-// If no rule exists for the requested endpoint, it rejects the request with a 403 Forbidden.
-// Otherwise, it verifies that the user has sufficient balance, deducts the required charge, and continues.
-func DynamicAccountingMiddleware(c *gin.Context) {
-    // Query the accounting rule for the requested path.
-    var rule database.AccountingRule
-    err := database.DB.Where("endpoint = ?", c.Request.URL.Path).First(&rule).Error
-    if err != nil {
-        // If no accounting rule exists for this endpoint, reject the request.
-        c.JSON(http.StatusForbidden, gin.H{"error": "Access forbidden: no accounting rule defined for this endpoint"})
-        c.Abort()
-        return
-    }
+// ChargePayload represents the request we send to accounting service
+type ChargePayload struct {
+    Username string `json:"username"`
+    Endpoint string `json:"endpoint"`
+}
 
-    // Retrieve JWT claims for the current user.
+// DynamicAccountingMiddleware calls the accounting service to check and deduct a charge.
+// If the accounting service returns an error, the request is aborted.
+func DynamicAccountingMiddleware(c *gin.Context) {
+    // Retrieve JWT claims.
     claimsVal, exists := c.Get("claims")
     if !exists {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Token claims not found"})
         c.Abort()
         return
     }
-    // Cast to jwt.MapClaims instead of map[string]interface{}
     claims, ok := claimsVal.(jwt.MapClaims)
     if !ok {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
@@ -108,29 +104,37 @@ func DynamicAccountingMiddleware(c *gin.Context) {
         return
     }
 
-    // Find the user in the database.
-    var user database.User
-    if err := database.DB.Where("username = ?", username).First(&user).Error; err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+    // Prepare the payload to send to the accounting service.
+    payload := ChargePayload{
+        Username: username,
+        Endpoint: c.Request.URL.Path,
+    }
+    jsonPayload, err := json.Marshal(payload)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not marshal payload"})
         c.Abort()
         return
     }
 
-    // Check if the user has enough balance for the charge.
-    if user.Balance < rule.Charge {
-        c.JSON(http.StatusPaymentRequired, gin.H{"error": "Insufficient balance"})
+    // Call the accounting service.
+    // Assume the accounting service URL is stored in config.AccountingEndpoint.
+    // For example: "http://localhost:8082"
+    accountingURL := config.AccountingEndpoint + "/charge"
+    resp, err := http.Post(accountingURL, "application/json", bytes.NewBuffer(jsonPayload))
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error calling accounting service", "details": err.Error()})
+        c.Abort()
+        return
+    }
+    defer resp.Body.Close()
+
+    // If the accounting service doesn't return 200 OK, abort the request.
+    if resp.StatusCode != http.StatusOK {
+        c.JSON(resp.StatusCode, gin.H{"error": "Accounting service rejected the charge"})
         c.Abort()
         return
     }
 
-    // Deduct the charge from the user's balance.
-    user.Balance -= rule.Charge
-    if err := database.DB.Save(&user).Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to update user balance"})
-        c.Abort()
-        return
-    }
-
-    // Continue to the next handler.
+    // If the accounting service returns OK, continue processing.
     c.Next()
 }

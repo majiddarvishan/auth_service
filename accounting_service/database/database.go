@@ -6,16 +6,10 @@ import (
     "gorm.io/driver/postgres"
     "gorm.io/gorm"
 
-    "auth_service/config"
+    "accounting_service/config"
 )
 
 var DB *gorm.DB
-
-type Role struct {
-    gorm.Model
-    Name        string `gorm:"uniqueIndex;not null"`
-    Description string
-}
 
 // User represents a user with a balance for charging purposes.
 type User struct {
@@ -28,6 +22,13 @@ type User struct {
     Balance  float64  `gorm:"default:0"`
 }
 
+// AccountingRule defines which endpoints require a balance check and how much should be deducted.
+type AccountingRule struct {
+    gorm.Model
+    Endpoint  string  `gorm:"uniqueIndex;not null"` // e.g., "/sms", "/premium_data"
+    Charge    float64 `gorm:"not null"`             // Amount to charge when accessing this endpoint
+}
+
 // InitDB initializes the database and performs migrations.
 func InitDB() {
     var err error
@@ -37,7 +38,7 @@ func InitDB() {
     }
 
     // Auto-migrate models.
-    if err := DB.AutoMigrate(&User{}, &Role{}); err != nil {
+    if err := DB.AutoMigrate(&User{}, &AccountingRule{}); err != nil {
         log.Fatal("Failed to auto migrate database:", err)
     }
 }
