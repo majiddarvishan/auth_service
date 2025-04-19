@@ -44,35 +44,41 @@ func SetupRoutes() *gin.Engine {
 		handlers.CreateOrUpdateAccountingRuleHandler,
 	)
 
-    // SMS endpoints group: any request starting with "/sms/"
-    // This group uses the standard authentication and dynamic accounting middleware,
-    // and then uses a specialized proxy handler (SMSProxyRequest) to forward the request
-    // to the final endpoint.
-    r.Any("/sms/*path",
-        middleware.AuthMiddleware,
-        middleware.DynamicAccountingMiddleware,
-        proxy.SMSProxyRequest,
-    )
+	// SMS endpoints group: any request starting with "/sms/"
+	// This group uses the standard authentication and dynamic accounting middleware,
+	// and then uses a specialized proxy handler (SMSProxyRequest) to forward the request
+	// to the final endpoint.
+	r.Any("/sms/*path",
+		middleware.AuthMiddleware,
+		middleware.DynamicAccountingMiddleware,
+		proxy.SMSProxyRequest,
+	)
 
-    // Fallback route:
-    // Use NoRoute to catch any requests that did not match the above routes.
-    // This chain enforces that the request must be authenticated,
-    // checked against an accounting rule, and then forwarded to the final component.
-    // r.NoRoute(
-    //     middleware.AuthMiddleware,              // Ensures a valid JWT is present.
-    //     middleware.DynamicAccountingMiddleware, // Checks and deducts balance based on the rule.
-    //     proxy.ProxyRequest,                     // Forwards the request to the final component.
-    // )
+	// Accounting endpoints group: Any request starting with /accounting/* gets redirected to the accounting service.
+	r.Any("/accounting/*path",
+		middleware.AuthMiddleware,
+		proxy.AccountingProxyRequest,
+	)
 
-    // (Optional) You can also add specific endpoints that require dynamic billing.
-    // For example:
-    // r.GET("/premium_data",
-    //  middleware.AuthMiddleware,
-    //  middleware.DynamicAccountingMiddleware,
-    //  func(c *gin.Context) {
-    //      c.JSON(http.StatusOK, gin.H{"message": "Premium data accessed"})
-    //  },
-    // )
+	// Fallback route:
+	// Use NoRoute to catch any requests that did not match the above routes.
+	// This chain enforces that the request must be authenticated,
+	// checked against an accounting rule, and then forwarded to the final component.
+	// r.NoRoute(
+	//     middleware.AuthMiddleware,              // Ensures a valid JWT is present.
+	//     middleware.DynamicAccountingMiddleware, // Checks and deducts balance based on the rule.
+	//     proxy.ProxyRequest,                     // Forwards the request to the final component.
+	// )
+
+	// (Optional) You can also add specific endpoints that require dynamic billing.
+	// For example:
+	// r.GET("/premium_data",
+	//  middleware.AuthMiddleware,
+	//  middleware.DynamicAccountingMiddleware,
+	//  func(c *gin.Context) {
+	//      c.JSON(http.StatusOK, gin.H{"message": "Premium data accessed"})
+	//  },
+	// )
 
 	// SMS endpoint: check balance and, if sufficient, forward the request to the final component.
 	// Note: We are reusing the generic proxy handler and not hardcoding any SMS logic.
@@ -91,24 +97,24 @@ func SetupRoutes() *gin.Engine {
 	// 	},
 	// )
 
-    // Global Dynamic Accounting Middleware:
-    // This middleware checks for the existence of an accounting rule for the incoming path.
-    // If a rule exists, it will verify that the user's balance is sufficient and deduct the charge.
-    // Otherwise, it will simply let the request pass.
-    // r.Use(middleware.DynamicAccountingMiddleware)
-    // r.Use(middleware.DynamicAccountingMiddleware)
+	// Global Dynamic Accounting Middleware:
+	// This middleware checks for the existence of an accounting rule for the incoming path.
+	// If a rule exists, it will verify that the user's balance is sufficient and deduct the charge.
+	// Otherwise, it will simply let the request pass.
+	// r.Use(middleware.DynamicAccountingMiddleware)
+	// r.Use(middleware.DynamicAccountingMiddleware)
 
-    // IMPORTANT: The endpoint below must be protected by AuthMiddleware so token claims are set.
-    // Here, the request first runs through AuthMiddleware, then DynamicAccountingMiddleware,
-    // and finally is forwarded via the generic proxy handler.
-    // r.Use(
-    //     middleware.AuthMiddleware,               // Decodes the JWT and sets claims in context.
-    //     middleware.DynamicAccountingMiddleware,  // Now the token claims are found!
-    //     proxy.ProxyRequest,                      // Forwards the request to the final component.
-    // )
+	// IMPORTANT: The endpoint below must be protected by AuthMiddleware so token claims are set.
+	// Here, the request first runs through AuthMiddleware, then DynamicAccountingMiddleware,
+	// and finally is forwarded via the generic proxy handler.
+	// r.Use(
+	//     middleware.AuthMiddleware,               // Decodes the JWT and sets claims in context.
+	//     middleware.DynamicAccountingMiddleware,  // Now the token claims are found!
+	//     proxy.ProxyRequest,                      // Forwards the request to the final component.
+	// )
 
-    // Fallback: all other routes are forwarded to the final component.
-    // r.Any("/*path", proxy.ProxyRequest)
+	// Fallback: all other routes are forwarded to the final component.
+	// r.Any("/*path", proxy.ProxyRequest)
 
 	// PROTECTED ROUTES:
 	// Create a separate engine for protected routes.

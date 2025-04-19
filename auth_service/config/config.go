@@ -18,7 +18,7 @@ var (
 	AccountingEndpoint string
 
 	// FinalEndpoint is the URL for the Final-Service
-	FinalEndpoint string
+	SmsEndpoint string
 )
 
 // LoadConfig loads environment variables from a .env file.
@@ -45,9 +45,9 @@ func LoadConfig() {
 	}
 
 	// Load the final endpoint URL.
-	FinalEndpoint = os.Getenv("FINAL_ENDPOINT")
-	if FinalEndpoint == "" {
+	SmsEndpoint = os.Getenv("SMS_ENDPOINT")
+	if SmsEndpoint == "" {
 		// Provide a default if not set, or log fatal if you require it.
-		FinalEndpoint = "http://localhost:8081"
+		SmsEndpoint = "http://localhost:8081"
 	}
 }
