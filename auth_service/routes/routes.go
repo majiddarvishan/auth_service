@@ -31,8 +31,15 @@ func SetupRoutes() *gin.Engine {
 	// })
 
 	// PUBLIC ROUTES:
-	r.POST("/register", handlers.RegisterHandler)
 	r.POST("/login", handlers.LoginHandler)
+
+	// r.POST("/register", handlers.RegisterHandler)
+
+	r.POST("/admin/users",
+		middleware.AuthMiddleware,          // Ensure the request is authenticated.
+		middleware.RoleMiddleware("admin"), // Ensure the requester is an admin.
+		handlers.RegisterHandler,           // Handler to create a new user.
+	)
 
 	r.GET("/admin",
 		middleware.AuthMiddleware,          // Ensure user is authenticated.

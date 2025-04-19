@@ -9,6 +9,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// type CreateUserRequest struct {
+//     Username string `json:"username"`
+//     Password string `json:"password"`
+//     Role     string `json:"role"`
+// }
+
 // AdminDashboardHandler retrieves user details and system statistics for the admin dashboard.
 func AdminDashboardHandler(c *gin.Context) {
 	// Ensure only admins can access this route.
@@ -66,3 +72,26 @@ func AdminDashboardHandler(c *gin.Context) {
 		"rules":   rules,
 	})
 }
+
+// func CreateUserHandler(c *gin.Context) {
+//     var req CreateUserRequest
+//     if err := c.ShouldBindJSON(&req); err != nil {
+//         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
+//         return
+//     }
+
+//     // Optionally, add validation for the username, password, and role.
+
+//     newUser := database.User{
+//         Username: req.Username,
+//         Password: req.Password, // Remember: always hash the password in production!
+//         Role:     req.Role,
+//     }
+
+//     if err := database.DB.Create(&newUser).Error; err != nil {
+//         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+//         return
+//     }
+
+//     c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "user": newUser})
+// }

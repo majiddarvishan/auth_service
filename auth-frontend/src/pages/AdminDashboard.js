@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import NewRoleForm from "../components/Admin/NewRoleForm";
+import NewUserForm from "../components/Admin/NewUserForm";
 
 const AdminDashboard = () => {
   // State to store users, roles and form selections.
@@ -128,6 +129,10 @@ const AdminDashboard = () => {
 
       {/* New Role Definition Section */}
       <NewRoleForm />
+
+
+      {/* New User Creation Section */}
+      <NewUserForm />
     </div>
   );
 };
