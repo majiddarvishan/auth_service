@@ -61,6 +61,12 @@ func SetupRoutes() *gin.Engine {
 		handlers.CreateRoleHandler,
 	)
 
+	r.GET("/roles",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.GetRolesHandler,
+	)
+
 	// Create or Update Accounting Rules (Admin Only)
 	r.POST("/accounting_rules",
 		middleware.AuthMiddleware,

@@ -37,6 +37,15 @@ func CreateRoleHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Role created successfully", "role": role})
 }
 
+func GetRolesHandler(c *gin.Context) {
+    var roles []database.Role
+    if err := database.DB.Find(&roles).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch roles"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"roles": roles})
+}
+
 // RoleMiddleware checks if the user has the required role.
 func RoleMiddleware(requiredRole string) gin.HandlerFunc {
 	return func(c *gin.Context) {
