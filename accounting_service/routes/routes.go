@@ -1,16 +1,18 @@
 package routes
 
 import (
-    "accounting_service/handlers"
+	"accounting_service/handlers"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 func SetupRoutes() *gin.Engine {
-    r := gin.Default()
+	r := gin.Default()
 
-    // an endpoint that checks and deducts a charge
-    r.POST("/charge", handlers.ChargeHandler)
+	// an endpoint that checks and deducts a charge
+	r.POST("/charge", handlers.ChargeHandler)
 
-    return r
+	r.PUT("/users/:username/charge", handlers.UpdateUserChargeHandler)
+
+	return r
 }

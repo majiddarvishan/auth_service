@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
   const [form, setForm] = useState({ username: "", password: "" });
@@ -10,8 +11,17 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axios.post("http://localhost:8080/login", form);
-      localStorage.setItem("token", response.data.token);
-      navigate("/dashboard");
+      const token = response.data.token;
+      localStorage.setItem("token", token);
+
+      // Decode the token to extract role information
+      const decodedToken = jwtDecode(token);
+      // Assume token includes a claim "role" (e.g., { ..., role: "admin", ... })
+      if (decodedToken.role === "admin") {
+        navigate("/admin"); // route for admin dashboard
+      } else {
+        navigate("/sms"); // route for non-admin SMS page
+      }
     } catch (error) {
       alert("Login failed");
     }

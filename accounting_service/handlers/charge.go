@@ -48,3 +48,26 @@ func ChargeHandler(c *gin.Context) {
 
     c.JSON(http.StatusOK, gin.H{"message": "Charge deducted", "new_balance": user.Balance})
 }
+
+func UpdateUserChargeHandler(c *gin.Context) {
+    username := c.Param("username")
+    var req struct {
+        Charge float64 `json:"charge"`
+    }
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON data"})
+        return
+    }
+    var user database.User
+    if err := database.DB.Where("username = ?", username).First(&user).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        return
+    }
+    user.Balance = req.Charge  // Make sure the User model has a Charge field; or if you meant Balance, update accordingly.
+    if err := database.DB.Save(&user).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user charge"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"message": "User charge updated successfully"})
+}
+

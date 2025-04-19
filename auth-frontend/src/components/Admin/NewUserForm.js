@@ -5,31 +5,32 @@ const NewUserForm = () => {
   const [userData, setUserData] = useState({
     username: "",
     password: "",
-    role: "" // will be set after roles are fetched
+    role: "" // This will be set after roles are fetched
   });
   const [availableRoles, setAvailableRoles] = useState([]);
 
   // Fetch available roles when the component mounts.
   useEffect(() => {
-    const fetchRoles = async () => {
+    async function fetchRoles() {
       try {
         const response = await axios.get("http://localhost:8080/roles", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
-        // Assume response.data.roles is an array of role objects, e.g., { ID, Name, Description }
+        // Assuming the response format is: { roles: [{ ID, Name, Description }, ...] }
         setAvailableRoles(response.data.roles);
-        // If roles exist, set the default role to the first one.
+
+        // Set the default role to the first available role if roles exist.
         if (response.data.roles.length > 0) {
-          setUserData(prev => ({ ...prev, role: response.data.roles[0].Name }));
+          setUserData((prev) => ({ ...prev, role: response.data.roles[0].Name }));
         }
       } catch (error) {
         console.error("Failed to fetch roles", error);
       }
-    };
-
+    }
     fetchRoles();
   }, []);
 
+  // Handles form submission to create a new user.
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
@@ -37,14 +38,15 @@ const NewUserForm = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       alert(`New user "${userData.username}" created successfully!`);
-      // Reset form. If available roles exist, set role to first one.
+
+      // Reset form. If available roles exist, set role to the first one.
       setUserData({
         username: "",
         password: "",
         role: availableRoles.length > 0 ? availableRoles[0].Name : ""
       });
     } catch (error) {
-      console.error(error);
+      console.error("Error creating new user", error);
       alert("Failed to create user");
     }
   };
@@ -60,9 +62,7 @@ const NewUserForm = () => {
             className="form-control"
             placeholder="Enter username"
             value={userData.username}
-            onChange={(e) =>
-              setUserData({ ...userData, username: e.target.value })
-            }
+            onChange={(e) => setUserData({ ...userData, username: e.target.value })}
             required
           />
         </div>
@@ -73,9 +73,7 @@ const NewUserForm = () => {
             className="form-control"
             placeholder="Enter password"
             value={userData.password}
-            onChange={(e) =>
-              setUserData({ ...userData, password: e.target.value })
-            }
+            onChange={(e) => setUserData({ ...userData, password: e.target.value })}
             required
           />
         </div>
@@ -84,19 +82,18 @@ const NewUserForm = () => {
           <select
             className="form-select"
             value={userData.role}
-            onChange={(e) =>
-              setUserData({ ...userData, role: e.target.value })
-            }
+            onChange={(e) => setUserData({ ...userData, role: e.target.value })}
             required
           >
-            {availableRoles.length === 0 && (
+            {availableRoles.length === 0 ? (
               <option value="">Loading roles...</option>
+            ) : (
+              availableRoles.map((role) => (
+                <option key={role.ID} value={role.Name}>
+                  {role.Name}
+                </option>
+              ))
             )}
-            {availableRoles.map((role) => (
-              <option key={role.ID} value={role.Name}>
-                {role.Name}
-              </option>
-            ))}
           </select>
         </div>
         <button type="submit" className="btn btn-success">
