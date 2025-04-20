@@ -38,9 +38,10 @@ type AccountingRule struct {
 // CustomEndpoint represents a user-defined route configuration.
 type CustomEndpoint struct {
     gorm.Model
-    Path        string `gorm:"uniqueIndex;not null"` // e.g. "/sms/*path"
+    Path        string `gorm:"uniqueIndex;not null"` // e.g., "/sms/*path"
     HandlerName string `gorm:"not null"`             // e.g., "SMSProxyRequest"
     Method      string `gorm:"default:'ANY'"`        // HTTP Method ("GET", "POST", etc. or ANY)
+    Endpoint    string `gorm:"not null"`             // Target endpoint (e.g., "https://api.external-service.com")
     Enabled     bool   `gorm:"default:true"`
 }
 

@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "auth_service",
+            "name": "proxy_service",
             "type": "go",
             "request": "launch",
             "mode": "auto",

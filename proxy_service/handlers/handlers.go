@@ -8,7 +8,7 @@ import (
 	"auth_service/database"
 
 	"github.com/gin-gonic/gin"
-    "github.com/golang-jwt/jwt/v5"  
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -178,3 +178,4 @@ func UpdateUserRoleHandler(c *gin.Context) {
 
     c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
 }
+

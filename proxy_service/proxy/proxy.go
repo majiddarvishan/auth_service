@@ -47,3 +47,14 @@ func SMSProxyRequest(c *gin.Context) {
 	c.Request.Host = remote.Host
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
+
+func ProxyToEndpoint(c *gin.Context, targetEndpoint string) {
+    targetURL, err := url.Parse(targetEndpoint)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid target endpoint"})
+        return
+    }
+
+    proxy := httputil.NewSingleHostReverseProxy(targetURL)
+    proxy.ServeHTTP(c.Writer, c.Request)
+}

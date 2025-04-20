@@ -6,12 +6,55 @@ import (
 	"auth_service/middleware"
 	"auth_service/proxy"
 	"log"
-
 	// "net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
+
+// func RegisterCustomEndpoints(r *gin.Engine) {
+// 	var endpoints []database.CustomEndpoint
+// 	if err := database.DB.Where("enabled = ?", true).Find(&endpoints).Error; err != nil {
+// 		log.Println("Error fetching custom endpoints:", err)
+// 		return
+// 	}
+
+// 	// Map handler names (as stored in the database) to the actual functions.
+// 	// Extend this map if you add more handlers.
+// 	customHandlerMap := map[string]gin.HandlerFunc{
+// 		"SMSProxyRequest": proxy.SMSProxyRequest,
+// 		// "OtherHandler": otherHandler,
+// 	}
+
+// 	for _, endpoint := range endpoints {
+// 		handler, exists := customHandlerMap[endpoint.HandlerName]
+// 		if !exists {
+// 			log.Printf("Custom endpoint registration skipped – handler '%s' not found", endpoint.HandlerName)
+// 			continue
+// 		}
+
+// 		// Register the endpoint using the specified HTTP method.
+// 		switch endpoint.Method {
+// 		case "GET":
+// 			r.GET(endpoint.Path, middleware.AuthMiddleware, handler)
+// 		case "POST":
+// 			r.POST(endpoint.Path, middleware.AuthMiddleware, handler)
+// 		case "PUT":
+// 			r.PUT(endpoint.Path, middleware.AuthMiddleware, handler)
+// 		case "DELETE":
+// 			r.DELETE(endpoint.Path, middleware.AuthMiddleware, handler)
+// 		default: // ANY or unrecognized method defaults to ANY
+// 			r.Any(endpoint.Path,
+// 				middleware.AuthMiddleware,
+// 				middleware.DynamicAccountingMiddleware,
+// 				handler)
+// 		}
+// 		log.Printf("Registered custom endpoint: %s [%s]", endpoint.Path, endpoint.Method)
+// 	}
+// }
+
+// We'll keep a variable for the dynamic endpoints group.
+var dynamicGroup *gin.RouterGroup
 
 func RegisterCustomEndpoints(r *gin.Engine) {
 	var endpoints []database.CustomEndpoint
@@ -20,11 +63,9 @@ func RegisterCustomEndpoints(r *gin.Engine) {
 		return
 	}
 
-	// Map handler names (as stored in the database) to the actual functions.
-	// Extend this map if you add more handlers.
-	customHandlerMap := map[string]gin.HandlerFunc{
-		"SMSProxyRequest": proxy.SMSProxyRequest,
-		// "OtherHandler": otherHandler,
+	// Map handler names (as stored in the database) to actual handler functions.
+	customHandlerMap := map[string]func(c *gin.Context, endpoint string){
+		"SMSProxyRequest": proxy.ProxyToEndpoint, // Dynamically forward to the target endpoint.
 	}
 
 	for _, endpoint := range endpoints {
@@ -34,35 +75,128 @@ func RegisterCustomEndpoints(r *gin.Engine) {
 			continue
 		}
 
+		// Wrap the handler to include the "endpoint" value.
+		wrappedHandler := func(c *gin.Context) {
+			handler(c, endpoint.Endpoint)
+		}
+
 		// Register the endpoint using the specified HTTP method.
 		switch endpoint.Method {
 		case "GET":
-			r.GET(endpoint.Path, middleware.AuthMiddleware, handler)
+			r.GET(endpoint.Path, middleware.AuthMiddleware, wrappedHandler)
 		case "POST":
-			r.POST(endpoint.Path, middleware.AuthMiddleware, handler)
+			r.POST(endpoint.Path, middleware.AuthMiddleware, wrappedHandler)
 		case "PUT":
-			r.PUT(endpoint.Path, middleware.AuthMiddleware, handler)
+			r.PUT(endpoint.Path, middleware.AuthMiddleware, wrappedHandler)
 		case "DELETE":
-			r.DELETE(endpoint.Path, middleware.AuthMiddleware, handler)
+			r.DELETE(endpoint.Path, middleware.AuthMiddleware, wrappedHandler)
 		default: // ANY or unrecognized method defaults to ANY
 			r.Any(endpoint.Path,
 				middleware.AuthMiddleware,
 				middleware.DynamicAccountingMiddleware,
-				handler)
+				wrappedHandler,
+			)
 		}
-		log.Printf("Registered custom endpoint: %s [%s]", endpoint.Path, endpoint.Method)
+		log.Printf("Registered custom endpoint: %s [%s] -> %s", endpoint.Path, endpoint.Method, endpoint.Endpoint)
 	}
+}
+
+
+// RegisterCustomEndpointsDynamic registers dynamic endpoints to the given router group.
+func RegisterCustomEndpointsDynamic(group *gin.RouterGroup) {
+    // First, clear the group routes if needed.
+    // Note: Gin doesn’t provide a built-in "Clear()" function; you may need to reinitialize
+    // the group or use your own structure to track dynamic routes.
+    var endpoints []database.CustomEndpoint
+    if err := database.DB.Where("enabled = ?", true).Find(&endpoints).Error; err != nil {
+        log.Println("Error fetching custom endpoints:", err)
+        return
+    }
+
+    // Create a local handlerMap for dynamic endpoints.
+    handlerMap := map[string]func(c *gin.Context, endpoint string){
+        "SMSProxyRequest": proxy.ProxyToEndpoint,
+        // add other handlers as needed
+    }
+
+    // It might be simplest to create a new router group, replacing the old one.
+    // For this example, we'll simply iterate and register routes.
+    for _, ep := range endpoints {
+        handler, exists := handlerMap[ep.HandlerName]
+        if !exists {
+            log.Printf("Handler not found: %s", ep.HandlerName)
+            continue
+        }
+
+        // Wrap the handler with the endpoint parameter.
+        wrappedHandler := func(c *gin.Context) {
+            handler(c, ep.Endpoint)
+        }
+
+        // Register based on the HTTP method.
+        switch ep.Method {
+        case "GET":
+            group.GET(ep.Path, middleware.AuthMiddleware, wrappedHandler)
+        case "POST":
+            group.POST(ep.Path, middleware.AuthMiddleware, wrappedHandler)
+        case "PUT":
+            group.PUT(ep.Path, middleware.AuthMiddleware, wrappedHandler)
+        case "DELETE":
+            group.DELETE(ep.Path, middleware.AuthMiddleware, wrappedHandler)
+        default:
+            group.Any(ep.Path, middleware.AuthMiddleware, wrappedHandler)
+        }
+        log.Printf("Registered dynamic route: %s [%s] -> %s", ep.Path, ep.Method, ep.Endpoint)
+    }
+}
+
+// RegisterDynamicRoutes is a helper to refresh dynamic endpoints.
+func RegisterDynamicRoutes(c *gin.Context) {
+    // You may need to use a mutex or other lock to update dynamicGroup safely.
+    RegisterCustomEndpointsDynamic(dynamicGroup)
+
+    // Use the default CORS configuration which allows all origins.
+    // dynamicGroup.Use(cors.Default())
+}
+
+// func updateCORS(r *gin.Engine) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+//         r.Use(cors.Default())
+//         c.Next()
+//     }
+// }
+
+func CORSMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        // Allow requests from any origin - you can restrict this by replacing "*" with your allowed domain.
+        c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+        c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+        c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Authorization, Accept, X-Requested-With")
+        c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+
+        // If the method is OPTIONS then return straight away.
+        // if c.Request.Method == "OPTIONS" {
+        //     c.AbortWithStatus(http.StatusNoContent)
+        //     return
+        // }
+
+        c.Next()
+    }
 }
 
 // SetupRoutes configures and returns the Gin engine.
 func SetupRoutes() *gin.Engine {
 	r := gin.Default()
 
+    // Use the custom CORS middleware
+    // r.Use(CORSMiddleware())
+
 	// Enable CORS for frontend requests.
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"}, // Allow all origins (or specify "http://localhost:3000")
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Authorization", "Content-Type", "Accept"},
+        AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
+        ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
 
@@ -73,6 +207,9 @@ func SetupRoutes() *gin.Engine {
 	// 	c.Header("Access-Control-Allow-Credentials", "true")
 	// 	c.JSON(http.StatusOK, gin.H{"message": "CORS preflight OK"})
 	// })
+
+    // Create a dedicated group for dynamic endpoints.
+    dynamicGroup = r.Group("/") // or some subpath like "/dynamic"
 
 	// PUBLIC ROUTES:
 	r.POST("/login", handlers.LoginHandler)
@@ -129,6 +266,7 @@ func SetupRoutes() *gin.Engine {
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.CreateCustomEndpointHandler,
+        RegisterDynamicRoutes,
 	)
 
 	// Dynamically register the custom endpoints from the database.

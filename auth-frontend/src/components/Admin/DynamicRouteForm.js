@@ -5,10 +5,10 @@ const DynamicRouteForm = () => {
   const [dynamicRoute, setDynamicRoute] = useState({
     path: "",
     handler: "",
-    method: "ANY"
+    method: "ANY",
+    endpoint: "",
   });
 
-  // Handler for creating new dynamic routes
   const handleCreateRoute = async (e) => {
     e.preventDefault();
     try {
@@ -20,7 +20,7 @@ const DynamicRouteForm = () => {
         }
       );
       alert(`Dynamic route created successfully: ${dynamicRoute.path}`);
-      setDynamicRoute({ path: "", handler: "", method: "ANY" });
+      setDynamicRoute({ path: "", handler: "", method: "ANY", endpoint: "" });
     } catch (error) {
       console.error("Failed to create route", error);
       alert("Failed to create route");
@@ -72,6 +72,19 @@ const DynamicRouteForm = () => {
             <option value="PUT">PUT</option>
             <option value="DELETE">DELETE</option>
           </select>
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Endpoint:</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter target endpoint (e.g., https://api.external.com)"
+            value={dynamicRoute.endpoint}
+            onChange={(e) =>
+              setDynamicRoute({ ...dynamicRoute, endpoint: e.target.value })
+            }
+            required
+          />
         </div>
         <button type="submit" className="btn btn-success">Create Route</button>
       </form>
