@@ -4,9 +4,9 @@ import axios from "axios";
 const DynamicRouteForm = () => {
   const [dynamicRoute, setDynamicRoute] = useState({
     path: "",
-    handler: "",
     method: "ANY",
     endpoint: "",
+    needAccounting: false, // new flag to indicate if accounting check is required
   });
 
   const handleCreateRoute = async (e) => {
@@ -20,7 +20,12 @@ const DynamicRouteForm = () => {
         }
       );
       alert(`Dynamic route created successfully: ${dynamicRoute.path}`);
-      setDynamicRoute({ path: "", handler: "", method: "ANY", endpoint: "" });
+      setDynamicRoute({
+        path: "",
+        method: "ANY",
+        endpoint: "",
+        needAccounting: false,
+      });
     } catch (error) {
       console.error("Failed to create route", error);
       alert("Failed to create route");
@@ -40,19 +45,6 @@ const DynamicRouteForm = () => {
             value={dynamicRoute.path}
             onChange={(e) =>
               setDynamicRoute({ ...dynamicRoute, path: e.target.value })
-            }
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Handler Name:</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Enter handler name (e.g., SMSProxyRequest)"
-            value={dynamicRoute.handler}
-            onChange={(e) =>
-              setDynamicRoute({ ...dynamicRoute, handler: e.target.value })
             }
             required
           />
@@ -86,7 +78,26 @@ const DynamicRouteForm = () => {
             required
           />
         </div>
-        <button type="submit" className="btn btn-success">Create Route</button>
+        <div className="mb-3 form-check">
+          <input
+            type="checkbox"
+            className="form-check-input"
+            id="needAccounting"
+            checked={dynamicRoute.needAccounting}
+            onChange={(e) =>
+              setDynamicRoute({
+                ...dynamicRoute,
+                needAccounting: e.target.checked,
+              })
+            }
+          />
+          <label className="form-check-label" htmlFor="needAccounting">
+            Check Accounting
+          </label>
+        </div>
+        <button type="submit" className="btn btn-success">
+          Create Route
+        </button>
       </form>
     </div>
   );
