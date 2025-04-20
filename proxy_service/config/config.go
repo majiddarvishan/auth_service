@@ -16,9 +16,6 @@ var (
 
 	// AccountingEndpoint is the URL for the Accounting-Service
 	AccountingEndpoint string
-
-	// FinalEndpoint is the URL for the Final-Service
-	SmsEndpoint string
 )
 
 // LoadConfig loads environment variables from a .env file.
@@ -42,12 +39,5 @@ func LoadConfig() {
 	if AccountingEndpoint == "" {
 		// Default to local accounting port.
 		AccountingEndpoint = "http://localhost:8082"
-	}
-
-	// Load the final endpoint URL.
-	SmsEndpoint = os.Getenv("SMS_ENDPOINT")
-	if SmsEndpoint == "" {
-		// Provide a default if not set, or log fatal if you require it.
-		SmsEndpoint = "http://localhost:8081"
 	}
 }

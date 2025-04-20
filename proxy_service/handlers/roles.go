@@ -45,31 +45,3 @@ func GetRolesHandler(c *gin.Context) {
     }
     c.JSON(http.StatusOK, gin.H{"roles": roles})
 }
-
-// RoleMiddleware checks if the user has the required role.
-func RoleMiddleware(requiredRole string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		claimsVal, exists := c.Get("claims")
-		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token claims not found"})
-			c.Abort()
-			return
-		}
-
-		claims, ok := claimsVal.(map[string]interface{})
-		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
-			c.Abort()
-			return
-		}
-
-		role, ok := claims["role"].(string)
-		if !ok || role != requiredRole {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Access restricted"})
-			c.Abort()
-			return
-		}
-
-		c.Next()
-	}
-}

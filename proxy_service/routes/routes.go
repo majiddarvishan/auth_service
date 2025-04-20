@@ -185,13 +185,6 @@ func SetupRoutes() *gin.Engine {
 		handlers.GetRolesHandler,
 	)
 
-	// Create or Update Accounting Rules (Admin Only)
-	// r.POST("/accounting_rules",
-	// 	middleware.AuthMiddleware,
-	// 	middleware.RoleMiddleware("admin"),
-	// 	handlers.CreateOrUpdateAccountingRuleHandler,
-	// )
-
 	// Dynamically register the custom endpoints from the database.
 	RegisterCustomEndpoints(r)
 
