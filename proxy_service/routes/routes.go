@@ -27,22 +27,25 @@ func RegisterCustomEndpoints(r *gin.Engine) {
 			proxy.ProxyToEndpoint(c, endpoint.Endpoint)
 		}
 
+		// Build the handler chain for the dynamic route.
+		handlersChain := []gin.HandlerFunc{middleware.AuthMiddleware}
+		if endpoint.NeedAccounting {
+			handlersChain = append(handlersChain, middleware.DynamicAccountingMiddleware)
+		}
+		handlersChain = append(handlersChain, wrappedHandler)
+
 		// Register the endpoint using the specified HTTP method.
 		switch endpoint.Method {
 		case "GET":
-			r.GET(endpoint.Path, middleware.AuthMiddleware, wrappedHandler)
+			r.GET(endpoint.Path, handlersChain...)
 		case "POST":
-			r.POST(endpoint.Path, middleware.AuthMiddleware, wrappedHandler)
+			r.POST(endpoint.Path, handlersChain...)
 		case "PUT":
-			r.PUT(endpoint.Path, middleware.AuthMiddleware, wrappedHandler)
+			r.PUT(endpoint.Path, handlersChain...)
 		case "DELETE":
-			r.DELETE(endpoint.Path, middleware.AuthMiddleware, wrappedHandler)
+			r.DELETE(endpoint.Path, handlersChain...)
 		default: // ANY or unrecognized method defaults to ANY
-			r.Any(endpoint.Path,
-				middleware.AuthMiddleware,
-				middleware.DynamicAccountingMiddleware,
-				wrappedHandler,
-			)
+			r.Any(endpoint.Path, handlersChain...)
 		}
 		log.Printf("Registered custom endpoint: %s [%s] -> %s", endpoint.Path, endpoint.Method, endpoint.Endpoint)
 	}
@@ -75,20 +78,15 @@ func RegisterCustomEndpointsDynamic(group *gin.RouterGroup) {
 		// Register based on the HTTP method.
 		switch ep.Method {
 		case "GET":
-			group.GET(ep.Path, middleware.AuthMiddleware, wrappedHandler)
+			group.GET(ep.Path, handlersChain...)
 		case "POST":
-			group.POST(ep.Path, middleware.AuthMiddleware, wrappedHandler)
+			group.POST(ep.Path, handlersChain...)
 		case "PUT":
-			group.PUT(ep.Path, middleware.AuthMiddleware, wrappedHandler)
+			group.PUT(ep.Path, handlersChain...)
 		case "DELETE":
-			group.DELETE(ep.Path, middleware.AuthMiddleware, wrappedHandler)
+			group.DELETE(ep.Path, handlersChain...)
 		default:
-            group.Any(ep.Path, handlersChain...)
-			// group.Any(ep.Path,
-			// 	middleware.AuthMiddleware,
-			// 	middleware.DynamicAccountingMiddleware,
-			// 	wrappedHandler,
-			// )
+			group.Any(ep.Path, handlersChain...)
 		}
 		log.Printf("Registered dynamic route: %s [%s] -> %s", ep.Path, ep.Method, ep.Endpoint)
 	}
@@ -134,32 +132,30 @@ func SetupRoutes() *gin.Engine {
 		AllowCredentials: true,
 	}))
 
-	// r.OPTIONS("/*path", func(c *gin.Context) {
-	// 	c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
-	// 	c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	// 	c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept")
-	// 	c.Header("Access-Control-Allow-Credentials", "true")
-	// 	c.JSON(http.StatusOK, gin.H{"message": "CORS preflight OK"})
-	// })
-
 	// Create a dedicated group for dynamic endpoints.
 	dynamicGroup = r.Group("/") // or some subpath like "/dynamic"
 
 	// PUBLIC ROUTES:
 	r.POST("/login", handlers.LoginHandler)
 
-	// r.POST("/register", handlers.RegisterHandler)
-
-	r.POST("/admin/users",
-		middleware.AuthMiddleware,          // Ensure the request is authenticated.
-		middleware.RoleMiddleware("admin"), // Ensure the requester is an admin.
-		handlers.RegisterHandler,           // Handler to create a new user.
-	)
-
 	r.GET("/admin",
 		middleware.AuthMiddleware,          // Ensure user is authenticated.
 		middleware.RoleMiddleware("admin"), // Ensure only admins can access.
 		handlers.AdminDashboardHandler,
+	)
+
+	r.POST("/admin/customendpoints",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.CreateCustomEndpointHandler,
+		RegisterDynamicRoutes,
+	)
+
+	// Add new User Endpoint (Admin Only)
+	r.POST("/users",
+		middleware.AuthMiddleware,          // Ensure the request is authenticated.
+		middleware.RoleMiddleware("admin"), // Ensure the requester is an admin.
+		handlers.RegisterHandler,           // Handler to create a new user.
 	)
 
 	// DELETE User Endpoint (Admin Only)
@@ -190,103 +186,14 @@ func SetupRoutes() *gin.Engine {
 	)
 
 	// Create or Update Accounting Rules (Admin Only)
-	r.POST("/accounting_rules",
-		middleware.AuthMiddleware,
-		middleware.RoleMiddleware("admin"),
-		handlers.CreateOrUpdateAccountingRuleHandler,
-	)
-
-	r.POST("/admin/customendpoints",
-		middleware.AuthMiddleware,
-		middleware.RoleMiddleware("admin"),
-		handlers.CreateCustomEndpointHandler,
-		RegisterDynamicRoutes,
-	)
+	// r.POST("/accounting_rules",
+	// 	middleware.AuthMiddleware,
+	// 	middleware.RoleMiddleware("admin"),
+	// 	handlers.CreateOrUpdateAccountingRuleHandler,
+	// )
 
 	// Dynamically register the custom endpoints from the database.
 	RegisterCustomEndpoints(r)
-
-	// SMS endpoints group: any request starting with "/sms/"
-	// This group uses the standard authentication and dynamic accounting middleware,
-	// and then uses a specialized proxy handler (SMSProxyRequest) to forward the request
-	// to the final endpoint.
-	// r.Any("/sms/*path",
-	// 	middleware.AuthMiddleware,
-	// 	middleware.DynamicAccountingMiddleware,
-	// 	proxy.SMSProxyRequest,
-	// )
-
-	// Accounting endpoints group: Any request starting with /accounting/* gets redirected to the accounting service.
-	r.Any("/accounting/*path",
-		middleware.AuthMiddleware,
-		proxy.AccountingProxyRequest,
-	)
-
-	// Fallback route:
-	// Use NoRoute to catch any requests that did not match the above routes.
-	// This chain enforces that the request must be authenticated,
-	// checked against an accounting rule, and then forwarded to the final component.
-	// r.NoRoute(
-	//     middleware.AuthMiddleware,              // Ensures a valid JWT is present.
-	//     middleware.DynamicAccountingMiddleware, // Checks and deducts balance based on the rule.
-	//     proxy.ProxyRequest,                     // Forwards the request to the final component.
-	// )
-
-	// (Optional) You can also add specific endpoints that require dynamic billing.
-	// For example:
-	// r.GET("/premium_data",
-	//  middleware.AuthMiddleware,
-	//  middleware.DynamicAccountingMiddleware,
-	//  func(c *gin.Context) {
-	//      c.JSON(http.StatusOK, gin.H{"message": "Premium data accessed"})
-	//  },
-	// )
-
-	// SMS endpoint: check balance and, if sufficient, forward the request to the final component.
-	// Note: We are reusing the generic proxy handler and not hardcoding any SMS logic.
-	// r.POST("/sms",
-	// 	middleware.AuthMiddleware,
-	// 	middleware.ChargeUserMiddleware(5), // Charge $5 for sending an SMS
-	// 	proxy.ProxyRequest,                 // Forwards the entire request to config.FinalEndpoint (e.g. http://localhost:8081)
-	// )
-
-	// Example Admin-only endpoint.
-	// r.GET("/admin",
-	// 	middleware.AuthMiddleware,
-	// 	middleware.RoleMiddleware("admin"),
-	// 	func(c *gin.Context) {
-	// 		c.JSON(200, gin.H{"message": "Welcome, Admin!"})
-	// 	},
-	// )
-
-	// Global Dynamic Accounting Middleware:
-	// This middleware checks for the existence of an accounting rule for the incoming path.
-	// If a rule exists, it will verify that the user's balance is sufficient and deduct the charge.
-	// Otherwise, it will simply let the request pass.
-	// r.Use(middleware.DynamicAccountingMiddleware)
-	// r.Use(middleware.DynamicAccountingMiddleware)
-
-	// IMPORTANT: The endpoint below must be protected by AuthMiddleware so token claims are set.
-	// Here, the request first runs through AuthMiddleware, then DynamicAccountingMiddleware,
-	// and finally is forwarded via the generic proxy handler.
-	// r.Use(
-	//     middleware.AuthMiddleware,               // Decodes the JWT and sets claims in context.
-	//     middleware.DynamicAccountingMiddleware,  // Now the token claims are found!
-	//     proxy.ProxyRequest,                      // Forwards the request to the final component.
-	// )
-
-	// Fallback: all other routes are forwarded to the final component.
-	// r.Any("/*path", proxy.ProxyRequest)
-
-	// PROTECTED ROUTES:
-	// Create a separate engine for protected routes.
-	// protected := gin.New()
-	// protected.Use(middleware.AuthMiddleware)
-	// // Catch-all route: forward any unmatched requests to the final component.
-	// protected.Any("/*path", proxy.ProxyRequest)
-	// r.NoRoute(func(c *gin.Context) {
-	// 	protected.HandleContext(c)
-	// })
 
 	return r
 }

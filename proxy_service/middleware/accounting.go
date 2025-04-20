@@ -119,7 +119,7 @@ func DynamicAccountingMiddleware(c *gin.Context) {
     // Call the accounting service.
     // Assume the accounting service URL is stored in config.AccountingEndpoint.
     // For example: "http://localhost:8082"
-    accountingURL := config.AccountingEndpoint + "/charge"
+    accountingURL := config.AccountingEndpoint + "/accounting/charge"
     resp, err := http.Post(accountingURL, "application/json", bytes.NewBuffer(jsonPayload))
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error calling accounting service", "details": err.Error()})

@@ -9,10 +9,8 @@ import (
 func SetupRoutes() *gin.Engine {
 	r := gin.Default()
 
-	// an endpoint that checks and deducts a charge
-	r.POST("/charge", handlers.ChargeHandler)
-
-	r.PUT("/users/:username/charge", handlers.UpdateUserChargeHandler)
+	r.POST("/accounting/charge", handlers.ChargeHandler)
+	r.PUT("/accounting/users/:username/charge", handlers.UpdateUserChargeHandler)
 
 	return r
 }

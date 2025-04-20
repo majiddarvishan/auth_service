@@ -34,7 +34,7 @@ const NewUserForm = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8080/admin/users", userData, {
+      await axios.post("http://localhost:8080/users", userData, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       alert(`New user "${userData.username}" created successfully!`);

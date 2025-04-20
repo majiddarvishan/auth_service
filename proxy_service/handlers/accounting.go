@@ -3,7 +3,6 @@ package handlers
 import (
     "net/http"
 
-    // "auth_service/database"
     "github.com/gin-gonic/gin"
 )
 
