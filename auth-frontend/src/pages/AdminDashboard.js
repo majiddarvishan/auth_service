@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import NewRoleForm from "../components/Admin/NewRoleForm";
 import NewUserForm from "../components/Admin/NewUserForm";
+import DynamicRouteForm from "../components/Admin/DynamicRouteForm";
 
 const AdminDashboard = () => {
   // State to store users, roles and form selections.
@@ -81,7 +82,9 @@ const AdminDashboard = () => {
       await axios.put(
         `http://localhost:8080/accounting/users/${selectedUserCharge}/charge`,
         { charge: parseFloat(chargeValue) },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
       );
       alert(`Charge of ${chargeValue} set for ${selectedUserCharge}`);
       // Optionally, update the local list for real-time feedback
@@ -192,9 +195,11 @@ const AdminDashboard = () => {
       {/* New Role Definition Section */}
       <NewRoleForm />
 
-
       {/* New User Creation Section */}
       <NewUserForm />
+
+      {/* Dynamic Route Creation Section */}
+      <DynamicRouteForm />
     </div>
   );
 };
