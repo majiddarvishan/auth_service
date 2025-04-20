@@ -1,14 +1,58 @@
 package routes
 
 import (
+	"auth_service/database"
 	"auth_service/handlers"
 	"auth_service/middleware"
 	"auth_service/proxy"
+	"log"
+
 	// "net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
+
+func RegisterCustomEndpoints(r *gin.Engine) {
+	var endpoints []database.CustomEndpoint
+	if err := database.DB.Where("enabled = ?", true).Find(&endpoints).Error; err != nil {
+		log.Println("Error fetching custom endpoints:", err)
+		return
+	}
+
+	// Map handler names (as stored in the database) to the actual functions.
+	// Extend this map if you add more handlers.
+	customHandlerMap := map[string]gin.HandlerFunc{
+		"SMSProxyRequest": proxy.SMSProxyRequest,
+		// "OtherHandler": otherHandler,
+	}
+
+	for _, endpoint := range endpoints {
+		handler, exists := customHandlerMap[endpoint.HandlerName]
+		if !exists {
+			log.Printf("Custom endpoint registration skipped – handler '%s' not found", endpoint.HandlerName)
+			continue
+		}
+
+		// Register the endpoint using the specified HTTP method.
+		switch endpoint.Method {
+		case "GET":
+			r.GET(endpoint.Path, middleware.AuthMiddleware, handler)
+		case "POST":
+			r.POST(endpoint.Path, middleware.AuthMiddleware, handler)
+		case "PUT":
+			r.PUT(endpoint.Path, middleware.AuthMiddleware, handler)
+		case "DELETE":
+			r.DELETE(endpoint.Path, middleware.AuthMiddleware, handler)
+		default: // ANY or unrecognized method defaults to ANY
+			r.Any(endpoint.Path,
+				middleware.AuthMiddleware,
+				middleware.DynamicAccountingMiddleware,
+				handler)
+		}
+		log.Printf("Registered custom endpoint: %s [%s]", endpoint.Path, endpoint.Method)
+	}
+}
 
 // SetupRoutes configures and returns the Gin engine.
 func SetupRoutes() *gin.Engine {
@@ -81,15 +125,24 @@ func SetupRoutes() *gin.Engine {
 		handlers.CreateOrUpdateAccountingRuleHandler,
 	)
 
+	r.POST("/admin/customendpoints",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.CreateCustomEndpointHandler,
+	)
+
+	// Dynamically register the custom endpoints from the database.
+	RegisterCustomEndpoints(r)
+
 	// SMS endpoints group: any request starting with "/sms/"
 	// This group uses the standard authentication and dynamic accounting middleware,
 	// and then uses a specialized proxy handler (SMSProxyRequest) to forward the request
 	// to the final endpoint.
-	r.Any("/sms/*path",
-		middleware.AuthMiddleware,
-		middleware.DynamicAccountingMiddleware,
-		proxy.SMSProxyRequest,
-	)
+	// r.Any("/sms/*path",
+	// 	middleware.AuthMiddleware,
+	// 	middleware.DynamicAccountingMiddleware,
+	// 	proxy.SMSProxyRequest,
+	// )
 
 	// Accounting endpoints group: Any request starting with /accounting/* gets redirected to the accounting service.
 	r.Any("/accounting/*path",

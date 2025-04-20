@@ -15,6 +15,12 @@ import (
 //     Role     string `json:"role"`
 // }
 
+type CreateCustomEndpointRequest struct {
+    Path        string `json:"path"`
+    HandlerName string `json:"handler"` // this string must match one of your registered handlers (e.g., "SMSProxyRequest")
+    Method      string `json:"method"`  // optional: "GET", "POST", etc. Default to "ANY" if not provided.
+}
+
 // AdminDashboardHandler retrieves user details and system statistics for the admin dashboard.
 func AdminDashboardHandler(c *gin.Context) {
 	// Ensure only admins can access this route.
@@ -95,3 +101,29 @@ func AdminDashboardHandler(c *gin.Context) {
 
 //     c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "user": newUser})
 // }
+
+func CreateCustomEndpointHandler(c *gin.Context) {
+    var req CreateCustomEndpointRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
+        return
+    }
+
+    // Create the endpoint configuration. If Method is empty, default to "ANY".
+    if req.Method == "" {
+        req.Method = "ANY"
+    }
+    endpoint := database.CustomEndpoint{
+        Path:        req.Path,
+        HandlerName: req.HandlerName,
+        Method:      req.Method,
+        Enabled:     true,
+    }
+
+    if err := database.DB.Create(&endpoint).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create custom endpoint"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint created successfully", "endpoint": endpoint})
+}

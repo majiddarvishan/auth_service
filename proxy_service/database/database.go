@@ -35,6 +35,15 @@ type AccountingRule struct {
     Charge   float64 `gorm:"not null"`             // Amount to charge when accessing this endpoint
 }
 
+// CustomEndpoint represents a user-defined route configuration.
+type CustomEndpoint struct {
+    gorm.Model
+    Path        string `gorm:"uniqueIndex;not null"` // e.g. "/sms/*path"
+    HandlerName string `gorm:"not null"`             // e.g., "SMSProxyRequest"
+    Method      string `gorm:"default:'ANY'"`        // HTTP Method ("GET", "POST", etc. or ANY)
+    Enabled     bool   `gorm:"default:true"`
+}
+
 // InitDB initializes the database and performs migrations.
 func InitDB() {
     var err error
@@ -44,7 +53,7 @@ func InitDB() {
     }
 
     // Auto-migrate models.
-    if err := DB.AutoMigrate(&User{}, &Role{}, &AccountingRule{}); err != nil {
+    if err := DB.AutoMigrate(&User{}, &Role{}, &AccountingRule{}, &CustomEndpoint{}); err != nil {
         log.Fatal("Failed to auto migrate database:", err)
     }
 }
