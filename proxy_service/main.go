@@ -1,9 +1,9 @@
 package main
 
 import (
-    "auth_service/config"
-    "auth_service/database"
-    "auth_service/routes"
+	"auth_service/config"
+	"auth_service/database"
+	"auth_service/routes"
 )
 
 // @title Auth service API
@@ -21,15 +21,15 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
-    // Load configuration from .env.
-    config.LoadConfig()
+	// Load configuration from .env.
+	config.LoadConfig()
 
-    // Initialize the database.
-    database.InitDB()
+	// Initialize the database.
+	database.InitDB()
 
-    // Setup routes.
-    r:= routes.SetupRoutes()
+	// Setup routes.
+	r := routes.SetupRoutes()
 
-    // Run the server on port 8080.
-    r.Run(":8080")
+	// Run the server on port 8080.
+	r.Run(":8080")
 }
