@@ -9,6 +9,11 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "auth_service/docs"
 )
 
 // We'll keep a variable for the dynamic endpoints group.
@@ -131,6 +136,8 @@ func SetupRoutes() *gin.Engine {
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Create a dedicated group for dynamic endpoints.
 	dynamicGroup = r.Group("/") // or some subpath like "/dynamic"
