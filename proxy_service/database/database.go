@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"log"
 
 	"gorm.io/driver/postgres"
@@ -49,7 +50,11 @@ type CustomEndpoint struct {
 func InitDB() {
 	var err error
 
-	DB, err = gorm.Open(postgres.Open(config.DatabaseURL), &gorm.Config{})
+     // Construct the connection string
+     connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable  TimeZone=UTC",
+     config.DatabaseHost, config.DatabasePort, config.DatabaseUserName, config.DatabasePassword, config.DatabaseName)
+
+	DB, err = gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}

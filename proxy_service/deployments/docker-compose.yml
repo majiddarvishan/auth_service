@@ -7,8 +7,15 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
-    env_file:
-      - .env
+    environment:
+      - SECRET_KEY=f78973efc0c0664995e2bb055bb2cac6779597a5294685f069229c909358f54a
+      - TOKEN_EXPIRATION_PERIOD=24h
+      - ACCOUNTING_ENDPOINT=http://localhost:8082
+      - DB_HOST=172.23.10.73
+      - DB_PORT=5432
+      - DB_USER_NAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=mydb
     ports:
       - 8080:8080
 
