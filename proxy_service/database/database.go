@@ -48,6 +48,7 @@ type CustomEndpoint struct {
 // InitDB initializes the database and performs migrations.
 func InitDB() {
 	var err error
+
 	DB, err = gorm.Open(postgres.Open(config.DatabaseURL), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)

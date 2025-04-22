@@ -20,10 +20,10 @@ var (
 
 // LoadConfig loads environment variables from a .env file.
 func LoadConfig() {
-	// Load .env file (log fatal if not found).
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
+    // Attempt to load .env only if it exists.
+    if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found (or not needed), continuing with environment variables.")
+    }
 
 	SecretKey = os.Getenv("SECRET_KEY")
 	if SecretKey == "" {

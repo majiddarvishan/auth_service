@@ -1,0 +1,16 @@
+services:
+  auth_proxy:
+    container_name: auth_proxy
+    image: auth_proxy:1.0.0
+    privileged: true
+    restart: on-failure
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - .env
+    ports:
+      - 8080:8080
+
+volumes:
+  output_data: {}
