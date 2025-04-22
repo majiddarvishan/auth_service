@@ -118,7 +118,7 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// Create JWT claims: subject, role, and expiry.
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
 	claims := jwt.MapClaims{
 		"sub":  user.Username,
 		"role": user.Role,
