@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"auth_service/database"
 
@@ -9,7 +10,61 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// SwaggerAccountingRule defines the accounting rule model for Swagger.
+// swagger:model SwaggerAccountingRule
+//
+// Fields:
+//   id:         Unique identifier
+//   endpoint:   Endpoint the rule applies to
+//   charge:     Charge amount for the endpoint
+//   created_at: Creation timestamp
+//   updated_at: Update timestamp
+//
+type SwaggerAccountingRule struct {
+	ID        uint      `json:"id"`
+	Endpoint  string    `json:"endpoint"`
+	Charge    float64   `json:"charge"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// UserRolePair defines username + role in the admin response.
+// swagger:model UserRolePair
+//
+// Fields:
+//   username: Username of the user
+//   role:     Role assigned to the user
+//
+type SwaggerUserRolePair struct {
+	Username string `json:"username"`
+	Role     string `json:"role"`
+}
+
+// AdminDashboardResponse is the payload returned by AdminDashboardHandler.
+// swagger:model AdminDashboardResponse
+//
+// Fields:
+//   message: Confirmation message
+//   users:   List of users with roles
+//   rules:   List of accounting rules
+//
+type AdminDashboardResponse struct {
+	Message string                   `json:"message"`
+	Users   []SwaggerUserRolePair    `json:"users"`
+	Rules   []SwaggerAccountingRule  `json:"rules"`
+}
+
 // AdminDashboardHandler retrieves user details and system statistics for the admin dashboard.
+// @Summary      Get admin dashboard data
+// @Description  Retrieves a list of all users (username + role) and all accounting rules. Admins only.
+// @Tags         Admin
+// @Produce      json
+// @Success      200  {object}  AdminDashboardResponse
+// @Failure      401  {object}  map[string]string  "Token claims missing or invalid"
+// @Failure      403  {object}  map[string]string  "Not an admin"
+// @Failure      500  {object}  map[string]string  "Database error"
+// @Security     ApiKeyAuth
+// @Router       /admin/dashboard [get]
 func AdminDashboardHandler(c *gin.Context) {
 	// Ensure only admins can access this route.
 	claimsVal, exists := c.Get("claims")
@@ -67,25 +122,3 @@ func AdminDashboardHandler(c *gin.Context) {
 	})
 }
 
-// func CreateUserHandler(c *gin.Context) {
-//     var req CreateUserRequest
-//     if err := c.ShouldBindJSON(&req); err != nil {
-//         c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
-//         return
-//     }
-
-//     // Optionally, add validation for the username, password, and role.
-
-//     newUser := database.User{
-//         Username: req.Username,
-//         Password: req.Password, // Remember: always hash the password in production!
-//         Role:     req.Role,
-//     }
-
-//     if err := database.DB.Create(&newUser).Error; err != nil {
-//         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
-//         return
-//     }
-
-//     c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "user": newUser})
-// }

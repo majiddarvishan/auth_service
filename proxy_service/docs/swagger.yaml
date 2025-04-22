@@ -1,5 +1,25 @@
 basePath: /
 definitions:
+  handlers.AdminDashboardResponse:
+    properties:
+      message:
+        type: string
+      rules:
+        items:
+          $ref: '#/definitions/handlers.SwaggerAccountingRule'
+        type: array
+      users:
+        items:
+          $ref: '#/definitions/handlers.SwaggerUserRolePair'
+        type: array
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      details:
+        type: string
+      error:
+        type: string
+    type: object
   handlers.LoginRequest:
     description: LoginRequest defines the expected request body for logging in.
     properties:
@@ -25,6 +45,63 @@ definitions:
       role:
         type: string
     type: object
+  handlers.RolesListResponse:
+    properties:
+      roles:
+        items:
+          $ref: '#/definitions/handlers.SwaggerRole'
+        type: array
+    type: object
+  handlers.SuccessResponse:
+    properties:
+      message:
+        type: string
+      role:
+        $ref: '#/definitions/handlers.SwaggerRole'
+    type: object
+  handlers.SwaggerAccountingRule:
+    properties:
+      charge:
+        type: number
+      created_at:
+        type: string
+      endpoint:
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  handlers.SwaggerRole:
+    properties:
+      description:
+        description: The description of the role
+        type: string
+      id:
+        description: The unique ID of the role
+        type: integer
+      name:
+        description: The name of the role
+        type: string
+    type: object
+  handlers.SwaggerRoleRequest:
+    properties:
+      description:
+        description: A short description of the role
+        type: string
+      name:
+        description: |-
+          The name of the role
+          required: true
+        type: string
+    type: object
+  handlers.SwaggerUserRolePair:
+    properties:
+      role:
+        type: string
+      username:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -39,6 +116,40 @@ info:
   title: Auth service API
   version: "1.0"
 paths:
+  /admin/dashboard:
+    get:
+      description: Retrieves a list of all users (username + role) and all accounting
+        rules. Admins only.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AdminDashboardResponse'
+        "401":
+          description: Token claims missing or invalid
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Not an admin
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Database error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get admin dashboard data
+      tags:
+      - Admin
   /login:
     post:
       consumes:
@@ -117,6 +228,52 @@ paths:
       summary: Register a new user
       tags:
       - Auth
+  /roles:
+    get:
+      description: Returns a list of all roles defined in the system.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RolesListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: List all roles
+      tags:
+      - roles
+    post:
+      consumes:
+      - application/json
+      description: Allows an admin to create a new role by specifying name and description.
+      parameters:
+      - description: Role details
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SwaggerRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Create a new role
+      tags:
+      - roles
   /users/{username}:
     delete:
       description: Delete an existing user account (admin only)
