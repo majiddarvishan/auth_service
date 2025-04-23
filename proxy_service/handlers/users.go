@@ -7,6 +7,7 @@ import (
 	"auth_service/config"
 	"auth_service/database"
 
+	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -75,14 +76,18 @@ func RegisterHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
 
-// LoginRequest represents the payload for user login. godoc
+// LoginRequest represents the payload for user login.
 // swagger:model LoginRequest
 // @Description LoginRequest defines the expected request body for logging in.
 // @Property username body string true "Username of the account"
 // @Property password body string true "Password of the account"
+// @Property captchaId body string true  "ID of the captcha challenge"
+// @Property captchaSolution body string true  "Solution to the captcha"
 type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username        string `json:"username"`
+	Password        string `json:"password"`
+	CaptchaId       string `json:"captchaId"`
+	CaptchaSolution string `json:"captchaSolution"`
 }
 
 // LoginHandler authenticates the user and returns a JWT token. godoc
@@ -101,6 +106,16 @@ func LoginHandler(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
+		return
+	}
+
+	if req.CaptchaId == "" || req.CaptchaSolution == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha is required"})
+		return
+	}
+
+	if !captcha.VerifyString(req.CaptchaId, req.CaptchaSolution) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha verification failed"})
 		return
 	}
 
