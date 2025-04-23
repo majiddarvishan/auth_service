@@ -28,7 +28,16 @@ Content-Type: application/json
 
 {
   "username": "admin",
-  "password": "password"
+  "password": "admin"
+}
+
+### Test the Auth Service Login Endpoint (With SSL)
+POST https://localhost:8443/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
 }
 
 ### Test the Auth Service Login Endpoint (Generate JWT Token)
