@@ -39,10 +39,10 @@ type AccountingRule struct {
 // CustomEndpoint represents a user-defined route configuration.
 type CustomEndpoint struct {
 	gorm.Model
-	Path           string `gorm:"uniqueIndex;not null"` // e.g., "/sms/*path"
-	Method         string `gorm:"default:'ANY'"`        // HTTP Method ("GET", "POST", etc. or ANY)
-	Endpoint       string `gorm:"not null"`             // Target endpoint (e.g., "https://api.external-service.com")
-	NeedAccounting bool   `gorm:"default:false"`        // Flag: true if route requires accounting check
+	Path           string `json:"path" gorm:"uniqueIndex;not null"`    // e.g., "/sms/*path"
+	Method         string `json:"method" gorm:"default:'ANY'"`         // HTTP Method ("GET", "POST", etc. or ANY)
+	Endpoint       string `json:"endpoint" gorm:"not null"`            // Target endpoint (e.g., "https://api.external-service.com")
+	NeedAccounting bool   `json:"needAccounting" gorm:"default:false"` // Flag: true if route requires accounting check
 	Enabled        bool   `gorm:"default:true"`
 }
 
@@ -50,9 +50,9 @@ type CustomEndpoint struct {
 func InitDB() {
 	var err error
 
-     // Construct the connection string
-     connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable  TimeZone=UTC",
-     config.DatabaseHost, config.DatabasePort, config.DatabaseUserName, config.DatabasePassword, config.DatabaseName)
+	// Construct the connection string
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable  TimeZone=UTC",
+		config.DatabaseHost, config.DatabasePort, config.DatabaseUserName, config.DatabasePassword, config.DatabaseName)
 
 	DB, err = gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {

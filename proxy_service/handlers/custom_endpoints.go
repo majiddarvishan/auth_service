@@ -12,13 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type CreateCustomEndpointRequest struct {
-	Path           string `json:"path"`
-	Method         string `json:"method"`
-	Endpoint       string `json:"endpoint"`
-	NeedAccounting bool   `json:"needAccounting"`
-}
-
 func registerCustomEndpointDynamic(r *gin.RouterGroup, ep *database.CustomEndpoint) {
 	// Wrap the handler with the endpoint parameter.
 	wrappedHandler := func(c *gin.Context) {
@@ -62,7 +55,7 @@ func RegisterCustomEndpoints(r *gin.Engine) {
 
 func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req CreateCustomEndpointRequest
+		var req database.CustomEndpoint
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
 			return
@@ -78,22 +71,16 @@ func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc 
 			req.Method = "ANY"
 		}
 
-		endpoint := database.CustomEndpoint{
-			Path:           req.Path,
-			Method:         req.Method,
-			Endpoint:       req.Endpoint,
-			NeedAccounting: req.NeedAccounting,
-			Enabled:        true,
-		}
+        req.Enabled = true
 
-		if err := database.DB.Create(&endpoint).Error; err != nil {
+		if err := database.DB.Create(&req).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create custom endpoint"})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint created successfully", "endpoint": endpoint})
+		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint created successfully", "endpoint": req})
 
-		registerCustomEndpointDynamic(dynamicGroup, &endpoint)
+		registerCustomEndpointDynamic(dynamicGroup, &req)
 
 		c.Next()
 	}
