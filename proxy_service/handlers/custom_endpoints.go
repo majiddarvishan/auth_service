@@ -19,44 +19,7 @@ type CreateCustomEndpointRequest struct {
 	NeedAccounting bool   `json:"needAccounting"`
 }
 
-func RegisterCustomEndpoints(r *gin.Engine) {
-	var endpoints []database.CustomEndpoint
-	if err := database.DB.Where("enabled = ?", true).Find(&endpoints).Error; err != nil {
-		log.Println("Error fetching custom endpoints:", err)
-		return
-	}
-
-	for _, endpoint := range endpoints {
-		// Wrap the handler to include the "endpoint" value.
-		wrappedHandler := func(c *gin.Context) {
-			proxy.ProxyToEndpoint(c, endpoint.Endpoint)
-		}
-
-		// Build the handler chain for the dynamic route.
-		handlersChain := []gin.HandlerFunc{middleware.AuthMiddleware}
-		if endpoint.NeedAccounting {
-			handlersChain = append(handlersChain, middleware.DynamicAccountingMiddleware)
-		}
-		handlersChain = append(handlersChain, wrappedHandler)
-
-		// Register the endpoint using the specified HTTP method.
-		switch endpoint.Method {
-		case "GET":
-			r.GET(endpoint.Path, handlersChain...)
-		case "POST":
-			r.POST(endpoint.Path, handlersChain...)
-		case "PUT":
-			r.PUT(endpoint.Path, handlersChain...)
-		case "DELETE":
-			r.DELETE(endpoint.Path, handlersChain...)
-		default: // ANY or unrecognized method defaults to ANY
-			r.Any(endpoint.Path, handlersChain...)
-		}
-		log.Printf("Registered custom endpoint: %s [%s] -> %s", endpoint.Path, endpoint.Method, endpoint.Endpoint)
-	}
-}
-
-func registerCustomEndpointDynamic(group *gin.RouterGroup, ep *database.CustomEndpoint) {
+func registerCustomEndpointDynamic(r *gin.RouterGroup, ep *database.CustomEndpoint) {
 	// Wrap the handler with the endpoint parameter.
 	wrappedHandler := func(c *gin.Context) {
 		proxy.ProxyToEndpoint(c, ep.Endpoint)
@@ -72,17 +35,29 @@ func registerCustomEndpointDynamic(group *gin.RouterGroup, ep *database.CustomEn
 	// Register based on the HTTP method.
 	switch ep.Method {
 	case "GET":
-		group.GET(ep.Path, handlersChain...)
+		r.GET(ep.Path, handlersChain...)
 	case "POST":
-		group.POST(ep.Path, handlersChain...)
+		r.POST(ep.Path, handlersChain...)
 	case "PUT":
-		group.PUT(ep.Path, handlersChain...)
+		r.PUT(ep.Path, handlersChain...)
 	case "DELETE":
-		group.DELETE(ep.Path, handlersChain...)
+		r.DELETE(ep.Path, handlersChain...)
 	default:
-		group.Any(ep.Path, handlersChain...)
+		r.Any(ep.Path, handlersChain...)
 	}
 	log.Printf("Registered dynamic route: %s [%s] -> %s", ep.Path, ep.Method, ep.Endpoint)
+}
+
+func RegisterCustomEndpoints(r *gin.Engine) {
+	var endpoints []database.CustomEndpoint
+	if err := database.DB.Where("enabled = ?", true).Find(&endpoints).Error; err != nil {
+		log.Println("Error fetching custom endpoints:", err)
+		return
+	}
+
+	for _, endpoint := range endpoints {
+		registerCustomEndpointDynamic(&r.RouterGroup, &endpoint)
+	}
 }
 
 func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc {
