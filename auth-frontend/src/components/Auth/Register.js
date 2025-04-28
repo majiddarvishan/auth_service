@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from '../../services/api';
 
 const Register = () => {
   const [form, setForm] = useState({ username: "", password: "", role: "user" });
@@ -7,7 +7,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("https://localhost:8443/register", form);
+      await api.post("/register", form);
       alert("Registered successfully!");
     } catch (error) {
       alert("Registration failed");

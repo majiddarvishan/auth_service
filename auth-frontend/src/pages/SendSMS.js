@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from '../services/api';
 
 const SendSMS = () => {
   const [form, setForm] = useState({ recipient: "", message: "" });
@@ -7,7 +7,7 @@ const SendSMS = () => {
   const handleSendSMS = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("https://localhost:8443/sms/sendsms", form, {
+      await api.post("/sms/sendsms", form, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       alert("SMS sent!");

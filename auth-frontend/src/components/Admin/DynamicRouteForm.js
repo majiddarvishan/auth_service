@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from '../../services/api';
 
 const DynamicRouteForm = () => {
   const [dynamicRoute, setDynamicRoute] = useState({
@@ -12,8 +12,8 @@ const DynamicRouteForm = () => {
   const handleCreateRoute = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        "https://localhost:8443/admin/customendpoints",
+      await api.post(
+        "/admin/customendpoints",
         dynamicRoute,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

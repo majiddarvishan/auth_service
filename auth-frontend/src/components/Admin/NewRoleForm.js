@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from '../../services/api';
 
 const NewRoleForm = () => {
   const [roleData, setRoleData] = useState({ name: "", description: "" });
@@ -8,8 +8,8 @@ const NewRoleForm = () => {
     e.preventDefault();
     try {
       // POST to the backend endpoint (adjust the URL if needed)
-      const response = await axios.post(
-        "https://localhost:8443/roles",
+      const response = await api.post(
+        "/roles",
         roleData,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../../services/api';
 
 const NewUserForm = () => {
   const [userData, setUserData] = useState({
@@ -13,7 +13,7 @@ const NewUserForm = () => {
   useEffect(() => {
     async function fetchRoles() {
       try {
-        const response = await axios.get("https://localhost:8443/roles", {
+        const response = await api.get("/roles", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
         // Assuming the response format is: { roles: [{ ID, Name, Description }, ...] }
@@ -34,7 +34,7 @@ const NewUserForm = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("https://localhost:8443/users", userData, {
+      await api.post("/users", userData, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       alert(`New user "${userData.username}" created successfully!`);

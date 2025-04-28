@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Base URL configuration
 const API = axios.create({
-  baseURL: "https://localhost:8443", // Adjust based on your backend
+  baseURL: process.env.REACT_APP_API_BASE_URL,
 });
 
 // Attach Authorization token automatically to requests

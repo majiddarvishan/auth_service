@@ -2,17 +2,21 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import api from '../../services/api';
+
 
 // Determine API base URL, supporting HTTP or HTTPS (self-signed backend on port 8443 by default)
-const defaultHttp = "http://localhost:8080";
-const defaultHttps = "https://localhost:8443"; // adjust port if needed
+// const defaultHttp = "http://localhost:8080";
+// const defaultHttps = "https://localhost:8443";
+// const defaultHttps = "https://172.26.249.184:8443";
+
 // const API_BASE = process.env.REACT_APP_API_BASE_URL
 //   || (window.location.protocol === "https:" ? defaultHttps : defaultHttp);
 
 // Create a custom axios instance for your API
-const api = axios.create({
-  baseURL: defaultHttps,
-});
+// const api = axios.create({
+//   baseURL: defaultHttps,
+// });
 
 const Login = () => {
   const [form, setForm] = useState({ username: "", password: "" });

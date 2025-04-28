@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import NewRoleForm from "../components/Admin/NewRoleForm";
 import NewUserForm from "../components/Admin/NewUserForm";
 import DynamicRouteForm from "../components/Admin/DynamicRouteForm";
+import api from '../services/api';
 
 const AdminDashboard = () => {
   // State to store users, roles and form selections.
@@ -21,7 +21,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const response = await axios.get("https://localhost:8443/admin", {
+        const response = await api.get("/admin", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         // Expecting response.data.users to be an array of objects with at least { username, role }
@@ -33,7 +33,7 @@ const AdminDashboard = () => {
 
     async function fetchRoles() {
       try {
-        const response = await axios.get("https://localhost:8443/roles", {
+        const response = await api.get("/roles", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         // Expecting response.data.roles to be an array of role objects, e.g., { ID, Name, Description }
@@ -54,8 +54,8 @@ const AdminDashboard = () => {
       return;
     }
     try {
-      await axios.put(
-        `http://localhost:8080/user/${selectedUserRole}/role`,
+      await api.put(
+        `/users/${selectedUserRole}/role`,
         { role: newRole },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -79,8 +79,8 @@ const AdminDashboard = () => {
       return;
     }
     try {
-      await axios.put(
-        `http://localhost:8080/accounting/users/${selectedUserCharge}/charge`,
+      await api.put(
+        `/accounting/users/${selectedUserCharge}/charge`,
         { charge: parseFloat(chargeValue) },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

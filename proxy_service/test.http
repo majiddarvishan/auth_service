@@ -20,7 +20,7 @@ Content-Type: application/json
 }
 
 ### Delete a user
-DELETE http://localhost:8080/user/demo
+DELETE http://localhost:8080/users/demo
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDUxMzEwNzIsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.QIVY13wgBu93eYIh1RXPFrKlG2H3tN9cxZXpZyiceSg
 
 ### Test the Auth Service Login Endpoint (Generate JWT Token)
@@ -70,7 +70,7 @@ GET http://localhost:8080/getstatus?message-id=4b17ae82-4d72-43a8-abab-99cb55c5d
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3ODg5MzcsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.16Ke962JfGhNX17UdIZa8nH1Jbg3XutR52dvmiAsCAE
 
 ### Update User Role (Admin Only)
-PUT http://localhost:8080/user/demo/role
+PUT http://localhost:8080/users/demo/role
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3ODg5MzcsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.16Ke962JfGhNX17UdIZa8nH1Jbg3XutR52dvmiAsCAE
 
