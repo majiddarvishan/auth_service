@@ -1,3 +1,4 @@
+@no-ssl-verify
 ### Register Admin User
 POST http://localhost:8080/register
 Content-Type: application/json
@@ -54,8 +55,8 @@ GET http://localhost:8080/home
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDQ3ODg5MzcsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.16Ke962JfGhNX17UdIZa8nH1Jbg3XutR52dvmiAsCAE
 
 ### Test the Auth Service Send SMS Endpoint (Protected)
-POST http://localhost:8080/sms/sendsms
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDUyMjgyMjgsInJvbGUiOiJlZGl0b3IiLCJzdWIiOiJuZXdfdXNlciJ9.1pS8Lkpt2z7JRSquCdAu1b65xznYA8tfwynb33NCs-o
+POST https://localhost:8443/sms/sendsms
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDU5Mjg4OTAsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.LebCd9WgDsjISGCB__vZvkTzO4Ou1T-GQK8H2ATXQbE
 Content-Type: application/json
 
 {

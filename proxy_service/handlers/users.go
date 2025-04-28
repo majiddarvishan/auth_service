@@ -7,7 +7,7 @@ import (
 	"auth_service/config"
 	"auth_service/database"
 
-	"github.com/dchest/captcha"
+	// "github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -109,15 +109,15 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	if req.CaptchaId == "" || req.CaptchaSolution == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha is required"})
-		return
-	}
+	// if req.CaptchaId == "" || req.CaptchaSolution == "" {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha is required"})
+	// 	return
+	// }
 
-	if !captcha.VerifyString(req.CaptchaId, req.CaptchaSolution) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha verification failed"})
-		return
-	}
+	// if !captcha.VerifyString(req.CaptchaId, req.CaptchaSolution) {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha verification failed"})
+	// 	return
+	// }
 
 	var user database.User
 	// Look up the user by username.

@@ -28,5 +28,5 @@ func main() {
 	database.InitDB()
 
 	// Setup routes.
-	routes.SetupRoutes(":8443", ":8080")
+	routes.SetupRoutes(":8080", ":8443")
 }

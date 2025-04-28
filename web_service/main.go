@@ -1,9 +1,13 @@
 package main
 
 import (
-    "net/http"
-    "github.com/gin-gonic/gin"
-    "github.com/google/uuid"
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type Message struct {
@@ -25,6 +29,43 @@ func main() {
             c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
             return
         }
+
+        authHeader := c.GetHeader("Authorization")
+        if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+            c.Abort()
+            return
+        }
+        tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+        token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+            // Ensure the signing method is HMAC.
+            if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+                return nil, jwt.ErrSignatureInvalid
+            }
+            SECRET_KEY:="f78973efc0c0664995e2bb055bb2cac6779597a5294685f069229c909358f54a"
+            return []byte(SECRET_KEY), nil
+            // return []byte(config.SecretKey), nil
+        })
+        if err != nil || !token.Valid {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+            c.Abort()
+            return
+        }
+
+        claims, ok := token.Claims.(jwt.MapClaims)
+        if !ok {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+            c.Abort()
+            return
+        }
+
+		user, ok := claims["sub"].(string)
+		if !ok {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Username not present in token"})
+			c.Abort()
+			return
+		}
+        fmt.Printf("user is %s\n", user)
 
         // Generate a unique message ID
         messageID := uuid.New().String()

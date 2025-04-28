@@ -131,7 +131,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 
 	// Enable CORS for frontend requests.
     corsConfig := cors.Config{
-        AllowOrigins:     []string{"http://localhost:3000"},
+        AllowOrigins:     []string{"*"},
         AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
         AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "X-Requested-With"},
         ExposeHeaders:    []string{"Content-Length"},
@@ -142,12 +142,12 @@ func SetupRoutes(httpAddr, httpsAddr string) {
     httpsRouter.Use(cors.New(corsConfig))
 
     // Create a separate group for captcha endpoints with explicit CORS
-    captchaGroup := httpRouter.Group("/captcha")
+    captchaGroup := httpsRouter.Group("/captcha")
     captchaGroup.Use(CaptchaCorsMiddleware())
 
     // Handle OPTIONS requests explicitly for captcha endpoints
-    httpRouter.OPTIONS("/captcha/*path", func(c *gin.Context) {
-        c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+    httpsRouter.OPTIONS("/captcha/*path", func(c *gin.Context) {
+        c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
         c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
         c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
         c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
@@ -184,18 +184,18 @@ func SetupRoutes(httpAddr, httpsAddr string) {
     })
 
     // HTTPS Router setup
-    httpsRouter.GET("/captcha/new", func(c *gin.Context) {
-        captchaId := captcha.NewLen(6)
-        c.JSON(http.StatusOK, gin.H{"captchaId": captchaId})
-    })
+    // httpsRouter.GET("/captcha/new", func(c *gin.Context) {
+    //     captchaId := captcha.NewLen(6)
+    //     c.JSON(http.StatusOK, gin.H{"captchaId": captchaId})
+    // })
 
-    httpsRouter.GET("/captcha/image/:captchaId", func(c *gin.Context) {
-        captchaId := c.Param("captchaId")
-        c.Header("Content-Type", "image/png")
-        if err := captcha.WriteImage(c.Writer, captchaId, 240, 80); err != nil {
-            c.AbortWithStatus(http.StatusInternalServerError)
-        }
-    })
+    // httpsRouter.GET("/captcha/image/:captchaId", func(c *gin.Context) {
+    //     captchaId := c.Param("captchaId")
+    //     c.Header("Content-Type", "image/png")
+    //     if err := captcha.WriteImage(c.Writer, captchaId, 240, 80); err != nil {
+    //         c.AbortWithStatus(http.StatusInternalServerError)
+    //     }
+    // })
 
 	httpsRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -219,21 +219,21 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	)
 
 	// Add new User Endpoint (Admin Only)
-	httpsRouter.POST("/users",
+	httpsRouter.POST("/register",
 		middleware.AuthMiddleware,          // Ensure the request is authenticated.
 		middleware.RoleMiddleware("admin"), // Ensure the requester is an admin.
 		handlers.RegisterHandler,           // Handler to create a new user.
 	)
 
 	// DELETE User Endpoint (Admin Only)
-	httpsRouter.DELETE("/user/:username",
+	httpsRouter.DELETE("/users/:username",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.DeleteUserHandler,
 	)
 
 	// Update User Role (Admin Only)
-	httpsRouter.PUT("/user/:username/role",
+	httpsRouter.PUT("/users/:username/role",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.UpdateUserRoleHandler,
