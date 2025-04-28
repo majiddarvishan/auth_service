@@ -8,8 +8,11 @@ const defaultHttp = "http://localhost:8080";
 const defaultHttps = "https://localhost:8443"; // adjust port if needed
 // const API_BASE = process.env.REACT_APP_API_BASE_URL
 //   || (window.location.protocol === "https:" ? defaultHttps : defaultHttp);
-const API_BASE = defaultHttps
 
+// Create a custom axios instance for your API
+const api = axios.create({
+  baseURL: defaultHttps,
+});
 
 const Login = () => {
   const [form, setForm] = useState({ username: "", password: "" });
@@ -18,9 +21,9 @@ const Login = () => {
   const navigate = useNavigate();
 
   // Optionally set axios base URL
-  useEffect(() => {
-    axios.defaults.baseURL = API_BASE;
-  }, []);
+  // useEffect(() => {
+  //   axios.defaults.baseURL = API_BASE;
+  // }, []);
 
   // Fetch a new captcha from backend
 //   const loadCaptcha = async () => {
@@ -54,7 +57,18 @@ const Login = () => {
     //   };
 
     //   const response = await axios.post("/login", payload);
-      const response = await axios.post("/login", form);
+
+      // Use the custom axios instance with SSL validation disabled
+      const response = await api.post("/login", form, {
+        // This tells axios to accept the response regardless of status code
+        validateStatus: () => true
+      });
+
+      // Check if the request was successful
+      if (response.status !== 200) {
+        throw new Error(response.data?.message || "Login failed");
+      }
+
       const { token } = response.data;
       localStorage.setItem("token", token);
 
@@ -65,7 +79,8 @@ const Login = () => {
         navigate("/sms");
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Login failed");
+      console.error("Login error:", error);
+      alert(error.message || "Login failed");
       // refresh captcha on failure
     //   loadCaptcha();
     }

@@ -9,7 +9,7 @@ const NewRoleForm = () => {
     try {
       // POST to the backend endpoint (adjust the URL if needed)
       const response = await axios.post(
-        "http://localhost:8080/roles",
+        "https://localhost:8443/roles",
         roleData,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

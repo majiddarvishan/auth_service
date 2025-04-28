@@ -13,7 +13,7 @@ const DynamicRouteForm = () => {
     e.preventDefault();
     try {
       await axios.post(
-        "http://localhost:8080/admin/customendpoints",
+        "https://localhost:8443/admin/customendpoints",
         dynamicRoute,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

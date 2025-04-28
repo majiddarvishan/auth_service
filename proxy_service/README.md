@@ -24,3 +24,13 @@ sudo apt install certbot
 ```bash
 certbot certonly --standalone -d yourdomain.com
 ```
+
+
+Use mkcert (better!)
+
+```bash
+# Install mkcert (Linux example)
+sudo apt install libnss3-tools
+mkcert -install
+mkcert localhost
+```

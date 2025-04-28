@@ -21,7 +21,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const response = await axios.get("http://localhost:8080/admin", {
+        const response = await axios.get("https://localhost:8443/admin", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         // Expecting response.data.users to be an array of objects with at least { username, role }
@@ -33,7 +33,7 @@ const AdminDashboard = () => {
 
     async function fetchRoles() {
       try {
-        const response = await axios.get("http://localhost:8080/roles", {
+        const response = await axios.get("https://localhost:8443/roles", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         // Expecting response.data.roles to be an array of role objects, e.g., { ID, Name, Description }

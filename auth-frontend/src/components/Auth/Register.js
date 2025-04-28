@@ -7,7 +7,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8080/register", form);
+      await axios.post("https://localhost:8443/register", form);
       alert("Registered successfully!");
     } catch (error) {
       alert("Registration failed");

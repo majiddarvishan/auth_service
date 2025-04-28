@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Base URL configuration
 const API = axios.create({
-  baseURL: "http://localhost:8080", // Adjust based on your backend
+  baseURL: "https://localhost:8443", // Adjust based on your backend
 });
 
 // Attach Authorization token automatically to requests

@@ -5,11 +5,11 @@ import (
 	"auth_service/handlers"
 	"auth_service/middleware"
 	"auth_service/proxy"
-	"fmt"
 	"log"
-	"net"
+	// "fmt"
+	// "net"
+	// "strings"
 	"net/http"
-	"strings"
 
 	"github.com/dchest/captcha"
 	"github.com/gin-contrib/cors"
@@ -127,7 +127,7 @@ func CaptchaCorsMiddleware() gin.HandlerFunc {
 // SetupRoutes configures and returns the Gin engine.
 func SetupRoutes(httpAddr, httpsAddr string) {
 	httpsRouter := gin.Default()
-    httpRouter := gin.Default()
+    // httpRouter := gin.Default()
 
 	// Enable CORS for frontend requests.
     corsConfig := cors.Config{
@@ -140,6 +140,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
     }
 
     httpsRouter.Use(cors.New(corsConfig))
+    // httpRouter.Use(cors.New(corsConfig))
 
     // Create a separate group for captcha endpoints with explicit CORS
     captchaGroup := httpsRouter.Group("/captcha")
@@ -169,31 +170,17 @@ func SetupRoutes(httpAddr, httpsAddr string) {
     })
 
     // Only redirect non-captcha routes to HTTPS
-    httpRouter.NoRoute(func(c *gin.Context) {
-        if !strings.HasPrefix(c.Request.URL.Path, "/captcha/") {
-            host := c.Request.Host
-            if h, _, err := net.SplitHostPort(host); err == nil {
-                host = h
-            }
-            target := fmt.Sprintf("https://%s%s", host, c.Request.RequestURI)
-            c.Redirect(http.StatusMovedPermanently, target)
-        } else {
-            // Handle 404 for captcha routes that don't exist
-            c.AbortWithStatus(http.StatusNotFound)
-        }
-    })
-
-    // HTTPS Router setup
-    // httpsRouter.GET("/captcha/new", func(c *gin.Context) {
-    //     captchaId := captcha.NewLen(6)
-    //     c.JSON(http.StatusOK, gin.H{"captchaId": captchaId})
-    // })
-
-    // httpsRouter.GET("/captcha/image/:captchaId", func(c *gin.Context) {
-    //     captchaId := c.Param("captchaId")
-    //     c.Header("Content-Type", "image/png")
-    //     if err := captcha.WriteImage(c.Writer, captchaId, 240, 80); err != nil {
-    //         c.AbortWithStatus(http.StatusInternalServerError)
+    // httpRouter.NoRoute(func(c *gin.Context) {
+    //     if !strings.HasPrefix(c.Request.URL.Path, "/captcha/") {
+    //         host := c.Request.Host
+    //         if h, _, err := net.SplitHostPort(host); err == nil {
+    //             host = h
+    //         }
+    //         target := fmt.Sprintf("https://%s%s", host, c.Request.RequestURI)
+    //         c.Redirect(http.StatusMovedPermanently, target)
+    //     } else {
+    //         // Handle 404 for captcha routes that don't exist
+    //         c.AbortWithStatus(http.StatusNotFound)
     //     }
     // })
 
@@ -256,12 +243,13 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	RegisterCustomEndpoints(httpsRouter)
 
     // Launch both servers
-    go func() {
-        if err := httpRouter.Run(httpAddr); err != nil {
-            log.Fatal("HTTP redirection server failed:", err)
-        }
-    }()
-    if err := httpsRouter.RunTLS(httpsAddr, "cert.pem", "key.pem"); err != nil {
+    // go func() {
+    //     if err := httpRouter.Run(httpAddr); err != nil {
+    //         log.Fatal("HTTP redirection server failed:", err)
+    //     }
+    // }()
+    // if err := httpsRouter.RunTLS(httpsAddr, "cert.pem", "key.pem"); err != nil {
+    if err := httpsRouter.RunTLS(httpsAddr, "localhost.pem", "localhost-key.pem"); err != nil {
         log.Fatal("Failed to start HTTPS server:", err)
     }
 }

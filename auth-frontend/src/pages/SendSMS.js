@@ -7,7 +7,7 @@ const SendSMS = () => {
   const handleSendSMS = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8080/sms/sendsms", form, {
+      await axios.post("https://localhost:8443/sms/sendsms", form, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       alert("SMS sent!");
