@@ -15,7 +15,7 @@ import (
 func registerCustomEndpointDynamic(r *gin.RouterGroup, ep *database.CustomEndpoint) {
 	// Wrap the handler with the endpoint parameter.
 	wrappedHandler := func(c *gin.Context) {
-		proxy.ProxyToEndpoint(c, ep.Endpoint)
+		proxy.ProxyToEndpoint(c, ep.Endpoints)
 	}
 
 	// Build the handler chain for the dynamic route.
@@ -38,7 +38,7 @@ func registerCustomEndpointDynamic(r *gin.RouterGroup, ep *database.CustomEndpoi
 	default:
 		r.Any(ep.Path, handlersChain...)
 	}
-	log.Printf("Registered dynamic route: %s [%s] -> %s", ep.Path, ep.Method, ep.Endpoint)
+	log.Printf("Registered dynamic route: %s [%s] -> %s", ep.Path, ep.Method, ep.Endpoints[0])
 }
 
 func RegisterCustomEndpoints(r *gin.Engine) {
@@ -61,18 +61,20 @@ func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc 
 			return
 		}
 
-		// Validate endpoint format
-		if req.Endpoint == "" || !strings.HasPrefix(req.Endpoint, "http") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing endpoint URL"})
-			return
+		// Validate endpoints format
+		for _, endpoint := range req.Endpoints {
+			if endpoint == "" || !strings.HasPrefix(endpoint, "http") {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing endpoint URL"})
+				return
+			}
 		}
 
 		if req.Method == "" {
 			req.Method = "ANY"
 		}
 
-        req.Path += "/*path"
-        req.Enabled = true
+		req.Path += "/*path"
+		req.Enabled = true
 
 		if err := database.DB.Create(&req).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create custom endpoint"})

@@ -1,60 +1,66 @@
 package proxy
 
 import (
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	// "strings"
-
-	// "auth_service/config"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-// AccountingProxyRequest forwards requests for accounting endpoints to the accounting service.
-// func AccountingProxyRequest(c *gin.Context) {
-//     // Use the accounting service endpoint from config.
-//     accountingEndpoint := config.AccountingEndpoint // e.g., "http://localhost:8082"
-//     remote, err := url.Parse(accountingEndpoint)
-//     if err != nil {
-//         c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid accounting service URL"})
-//         return
-//     }
+// NewMultiTargetReverseProxy creates a reverse proxy that load-balances requests
+// among the provided target URLs.
+func NewMultiTargetReverseProxy(targets []*url.URL) *httputil.ReverseProxy {
+    // Create a new random generator using a custom seed.
+    rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-//     // Remove the "/accounting" prefix so that the accounting service gets the appropriate path.
-//     c.Request.URL.Path = strings.TrimPrefix(c.Request.URL.Path, "/accounting")
-//     if c.Request.URL.Path == "" {
-//         c.Request.URL.Path = "/"
-//     }
-//     c.Request.Host = remote.Host
+    // Custom director function to choose a target per request.
+    director := func(req *http.Request) {
+        // Pick a target randomly.
+        target := targets[rng.Intn(len(targets))]
 
-//     // Create and use the reverse proxy.
-//     proxy := httputil.NewSingleHostReverseProxy(remote)
-//     proxy.ServeHTTP(c.Writer, c.Request)
-// }
+        // Update the scheme and host of the request to match the selected target.
+        req.URL.Scheme = target.Scheme
+        req.URL.Host = target.Host
 
-// func SMSProxyRequest(c *gin.Context) {
-// 	smsEndpoint := config.SmsEndpoint
+        // Optionally, you can adjust the path if you don't want to append the original request path.
+        // For example, to use only the target's path:
+        // req.URL.Path = target.Path
+        // Or, to preserve the incoming request's path, you can leave it as is.
 
-// 	remote, err := url.Parse(smsEndpoint)
+        // If the target specifies a base path, you might need to join them properly.
+    }
+
+    return &httputil.ReverseProxy{Director: director}
+}
+
+func ProxyToEndpoint(c *gin.Context, targetEndpoints []string) {
+    targets := []*url.URL{}
+
+    for _, target := range targetEndpoints {
+        t, err := url.Parse(target)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid target endpoint"})
+            return
+        }
+
+        targets = append(targets, t)
+    }
+
+    proxy := NewMultiTargetReverseProxy(targets)
+	proxy.ServeHTTP(c.Writer, c.Request)
+}
+
+
+// func ProxyToEndpoint(c *gin.Context, targetEndpoint string) {
+// 	targetURL, err := url.Parse(targetEndpoint)
 // 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid final service URL"})
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid target endpoint"})
 // 		return
 // 	}
 
-// 	proxy := httputil.NewSingleHostReverseProxy(remote)
-// 	// Update the Host header so the final service correctly receives the request.
-// 	c.Request.Host = remote.Host
+// 	proxy := httputil.NewSingleHostReverseProxy(targetURL)
 // 	proxy.ServeHTTP(c.Writer, c.Request)
 // }
-
-func ProxyToEndpoint(c *gin.Context, targetEndpoint string) {
-    targetURL, err := url.Parse(targetEndpoint)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid target endpoint"})
-        return
-    }
-
-    proxy := httputil.NewSingleHostReverseProxy(targetURL)
-    proxy.ServeHTTP(c.Writer, c.Request)
-}

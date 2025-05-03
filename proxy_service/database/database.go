@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"log"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-
 	"auth_service/config"
+
+	"gorm.io/driver/postgres"
+    "github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
@@ -39,11 +40,11 @@ type AccountingRule struct {
 // CustomEndpoint represents a user-defined route configuration.
 type CustomEndpoint struct {
 	gorm.Model
-	Path           string `json:"path" gorm:"uniqueIndex;not null"`    // e.g., "/sms/*path"
-	Method         string `json:"method" gorm:"default:'ANY'"`         // HTTP Method ("GET", "POST", etc. or ANY)
-	Endpoint       string `json:"endpoint" gorm:"not null"`            // Target endpoint (e.g., "https://api.external-service.com")
-	NeedAccounting bool   `json:"needAccounting" gorm:"default:false"` // Flag: true if route requires accounting check
-	Enabled        bool   `gorm:"default:true"`
+	Path   string `json:"path" gorm:"uniqueIndex;not null"` // e.g., "/sms/*path"
+	Method string `json:"method" gorm:"default:'ANY'"`      // HTTP Method ("GET", "POST", etc. or ANY)
+	Endpoints      pq.StringArray `json:"endpoints" gorm:"type:text[];not null;default:'{}'"` // Target endpoints
+	NeedAccounting bool           `json:"needAccounting" gorm:"default:false"`                // Flag: true if route requires accounting check
+	Enabled        bool           `gorm:"default:true"`
 }
 
 // InitDB initializes the database and performs migrations.
