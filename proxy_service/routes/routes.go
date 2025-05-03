@@ -109,17 +109,17 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// Create a dedicated group for dynamic endpoints.
 	var dynamicGroup *gin.RouterGroup = httpsRouter.Group("/") // or some subpath like "/dynamic"
 
-	// httpsRouter.POST("/admin/customendpoints",
-	// 	middleware.AuthMiddleware,
-	// 	middleware.RoleMiddleware("admin"),
-	// 	handlers.CreateCustomEndpointHandler,
-	// 	RegisterDynamicRoutes,
-	// )
 	httpsRouter.POST("/admin/customendpoints",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.CreateCustomEndpointHandler(dynamicGroup),
 	)
+
+    // httpsRouter.DELETE("/admin/customendpoints/:endpoint",
+	// 	middleware.AuthMiddleware,
+	// 	middleware.RoleMiddleware("admin"),
+	// 	handlers.CreateCustomEndpointHandler(dynamicGroup),
+	// )
 
 	// Dynamically register the custom endpoints from the database.
 	handlers.RegisterCustomEndpoints(httpsRouter)

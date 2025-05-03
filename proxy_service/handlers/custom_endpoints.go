@@ -71,6 +71,7 @@ func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc 
 			req.Method = "ANY"
 		}
 
+        req.Path += "/*path"
         req.Enabled = true
 
 		if err := database.DB.Create(&req).Error; err != nil {
