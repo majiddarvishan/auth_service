@@ -95,9 +95,21 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	//     }
 	// })
 
-	httpsRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// redirect /swagger to /swagger/index.html
+	httpsRouter.GET("/swagger", func(c *gin.Context) {
+        c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	})
+	// also catch the slash variant if you like
+	// httpsRouter.GET("/swagger/", func(c *gin.Context) {
+    //     c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	// })
 
-	// PUBLIC ROUTES:
+    // httpsRouter.GET("/swagger", func(c *gin.Context) {
+    //     c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+    // })
+
+    httpsRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	httpsRouter.POST("/login", handlers.LoginHandler)
 
 	httpsRouter.GET("/admin",
@@ -115,7 +127,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		handlers.CreateCustomEndpointHandler(dynamicGroup),
 	)
 
-    // httpsRouter.DELETE("/admin/customendpoints/:endpoint",
+	// httpsRouter.DELETE("/admin/customendpoints/:endpoint",
 	// 	middleware.AuthMiddleware,
 	// 	middleware.RoleMiddleware("admin"),
 	// 	handlers.CreateCustomEndpointHandler(dynamicGroup),
