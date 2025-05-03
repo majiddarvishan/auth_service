@@ -39,12 +39,12 @@ const docTemplate = `{
                 "summary": "Create Custom Endpoint",
                 "parameters": [
                     {
-                        "description": "Login payload",
+                        "description": "CustomEndpoint payload",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.LoginRequest"
+                            "$ref": "#/definitions/handlers.SwaggerCustomEndpoint"
                         }
                     }
                 ],
@@ -572,6 +572,27 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.SwaggerCustomEndpoint": {
+            "description": "SwaggerCustomEndpoint defines the expected request body for custom endpoint.",
+            "type": "object",
+            "properties": {
+                "endpoints": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "method": {
+                    "type": "string"
+                },
+                "needAccounting": {
+                    "type": "boolean"
+                },
+                "path": {
                     "type": "string"
                 }
             }

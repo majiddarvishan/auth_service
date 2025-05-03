@@ -76,6 +76,21 @@ definitions:
       updated_at:
         type: string
     type: object
+  handlers.SwaggerCustomEndpoint:
+    description: SwaggerCustomEndpoint defines the expected request body for custom
+      endpoint.
+    properties:
+      endpoints:
+        items:
+          type: string
+        type: array
+      method:
+        type: string
+      needAccounting:
+        type: boolean
+      path:
+        type: string
+    type: object
   handlers.SwaggerRole:
     properties:
       description:
@@ -126,12 +141,12 @@ paths:
       - application/json
       description: Create Custom Endpoint to redirect its requests to another endpoints
       parameters:
-      - description: Login payload
+      - description: CustomEndpoint payload
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handlers.LoginRequest'
+          $ref: '#/definitions/handlers.SwaggerCustomEndpoint'
       produces:
       - application/json
       responses:

@@ -53,13 +53,27 @@ func RegisterCustomEndpoints(r *gin.Engine) {
 	}
 }
 
+// SwaggerCustomEndpoint represents the payload for Custom Endpoint.
+// swagger:model SwaggerCustomEndpoint
+// @Description SwaggerCustomEndpoint defines the expected request body for custom endpoint.
+// @Property path body string true "Prefix of URI"
+// @Property method body string true "method of request"
+// @Property endpoints body []string true  "ID of the captcha challenge"
+// @Property needAccounting body string true  "Needs check accouting before redirect it"
+type SwaggerCustomEndpoint struct {
+	Path           string
+	Method         string
+	Endpoints      []string
+	NeedAccounting bool
+}
+
 // CreateCustomEndpointHandler create custom endpoint.
 // @Summary      Create Custom Endpoint
 // @Description  Create Custom Endpoint to redirect its requests to another endpoints
 // @Tags         Admin
 // @Accept       json
 // @Produce      json
-// @Param        request  body      LoginRequest  true  "Login payload"
+// @Param        request  body      SwaggerCustomEndpoint  true  "CustomEndpoint payload"
 // @Success      200      {object}  map[string]string  "JWT token"
 // @Failure      400      {object}  map[string]string  "Invalid JSON format"
 // @Failure      401      {object}  map[string]string  "Unauthorized: invalid credentials"
