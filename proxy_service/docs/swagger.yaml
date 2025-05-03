@@ -23,6 +23,10 @@ definitions:
   handlers.LoginRequest:
     description: LoginRequest defines the expected request body for logging in.
     properties:
+      captchaId:
+        type: string
+      captchaSolution:
+        type: string
       password:
         type: string
       username:
@@ -116,6 +120,48 @@ info:
   title: Auth service API
   version: "1.0"
 paths:
+  /admin/customendpoints:
+    post:
+      consumes:
+      - application/json
+      description: Create Custom Endpoint to redirect its requests to another endpoints
+      parameters:
+      - description: Login payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid JSON format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'Unauthorized: invalid credentials'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error during token generation
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create Custom Endpoint
+      tags:
+      - Admin
   /admin/dashboard:
     get:
       description: Retrieves a list of all users (username + role) and all accounting
@@ -192,42 +238,6 @@ paths:
       summary: Login a user
       tags:
       - Auth
-  /register:
-    post:
-      consumes:
-      - application/json
-      description: Create a new user account with username, password, and role
-      parameters:
-      - description: Registration payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.RegisterRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User registered successfully
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Invalid input or missing fields
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Server error during registration
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Register a new user
-      tags:
-      - Auth
   /roles:
     get:
       description: Returns a list of all roles defined in the system.
@@ -274,6 +284,42 @@ paths:
       summary: Create a new role
       tags:
       - roles
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with username, password, and role
+      parameters:
+      - description: Registration payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User registered successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input or missing fields
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error during registration
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - Auth
   /users/{username}:
     delete:
       description: Delete an existing user account (admin only)

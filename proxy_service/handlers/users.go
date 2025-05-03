@@ -35,7 +35,7 @@ type RegisterRequest struct {
 // @Success      200      {object}  map[string]string  "User registered successfully"
 // @Failure      400      {object}  map[string]string  "Invalid input or missing fields"
 // @Failure      500      {object}  map[string]string  "Server error during registration"
-// @Router       /register [post]
+// @Router       /users [post]
 func RegisterHandler(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -90,7 +90,7 @@ type LoginRequest struct {
 	CaptchaSolution string `json:"captchaSolution"`
 }
 
-// LoginHandler authenticates the user and returns a JWT token. godoc
+// LoginHandler authenticates the user and returns a JWT token.
 // @Summary      Login a user
 // @Description  Authenticate user credentials and return a signed JWT
 // @Tags         Auth

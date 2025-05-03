@@ -53,6 +53,18 @@ func RegisterCustomEndpoints(r *gin.Engine) {
 	}
 }
 
+// CreateCustomEndpointHandler create custom endpoint.
+// @Summary      Create Custom Endpoint
+// @Description  Create Custom Endpoint to redirect its requests to another endpoints
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        request  body      LoginRequest  true  "Login payload"
+// @Success      200      {object}  map[string]string  "JWT token"
+// @Failure      400      {object}  map[string]string  "Invalid JSON format"
+// @Failure      401      {object}  map[string]string  "Unauthorized: invalid credentials"
+// @Failure      500      {object}  map[string]string  "Server error during token generation"
+// @Router       /admin/customendpoints [post]
 func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req database.CustomEndpoint
