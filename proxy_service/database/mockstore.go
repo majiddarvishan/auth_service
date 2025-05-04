@@ -24,6 +24,12 @@ func NewMockStore() *MockStore {
 	}
 }
 
+// Init is a no-op for MockStore.
+func (m *MockStore) Init() error {
+	// nothing to do
+	return nil
+}
+
 func (m *MockStore) allocateID() uint {
 	id := m.nextID
 	m.nextID++
