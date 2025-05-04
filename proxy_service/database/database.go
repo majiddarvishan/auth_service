@@ -24,7 +24,10 @@ type User struct {
 	gorm.Model
 	Username string `gorm:"uniqueIndex"`
 	Password string
-	Role     string // Optional if you want a backup or quick check.
+    RoleID   uint // Foreign key field
+	Role     Role `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"` // Association
+
+	// Role     string // Optional if you want a backup or quick check.
 	// RoleID   uint     // Foreign key to the Role table.
 	// RoleInfo Role     `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Balance float64 `gorm:"default:0"`

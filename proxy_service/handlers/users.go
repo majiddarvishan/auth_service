@@ -55,17 +55,36 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	// Use provided role or assign a default role.
-	role := req.Role
-	if role == "" {
-		role = "user"
+    // Use provided role or assign a default role.
+	roleName := req.Role
+	if roleName == "" {
+		roleName = "guest"
+	}
+
+    // Look up the role in the database.
+	var role database.Role
+	if err := database.DB.Where("name = ?", roleName).First(&role).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Role not found"})
+		return
 	}
 
 	user := database.User{
 		Username: req.Username,
 		Password: string(hashedPassword),
-		Role:     role,
+		RoleID:   role.ID,
 	}
+
+	// // Use provided role or assign a default role.
+	// role := req.Role
+	// if role == "" {
+	// 	role = "user"
+	// }
+
+	// user := database.User{
+	// 	Username: req.Username,
+	// 	Password: string(hashedPassword),
+	// 	Role:     role,
+	// }
 
 	// Create user in the database.
 	if err := database.DB.Create(&user).Error; err != nil {
@@ -119,12 +138,22 @@ func LoginHandler(c *gin.Context) {
 	// 	return
 	// }
 
-	var user database.User
 	// Look up the user by username.
-	if err := database.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-		return
-	}
+	// var user database.User
+	// if err := database.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
+	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+	// 	return
+	// }
+
+     // Fetch user *and* its Role in one go:
+     var user database.User
+     if err := database.DB.
+         Preload("Role").
+         Where("username = ?", req.Username).
+         First(&user).Error; err != nil {
+         c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+         return
+     }
 
 	// Compare the stored hashed password with the incoming password.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
@@ -136,7 +165,7 @@ func LoginHandler(c *gin.Context) {
 	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
 	claims := jwt.MapClaims{
 		"user":  user.Username,
-		"role": user.Role,
+		"role": user.Role.Name,
 		"exp":  expirationTime.Unix(),
 	}
 
@@ -239,8 +268,15 @@ func UpdateUserRoleHandler(c *gin.Context) {
 		return
 	}
 
+    // Look up the role in the database.
+	var role database.Role
+	if err := database.DB.Where("name = ?", req.Role).First(&role).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Role not found"})
+		return
+	}
+
 	// Update the user's role.
-	user.Role = req.Role
+	user.RoleID = role.ID
 
 	if err := database.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role", "details": err.Error()})

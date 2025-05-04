@@ -87,19 +87,28 @@ func AdminDashboardHandler(c *gin.Context) {
 		return
 	}
 
-	// Retrieve all users.
-	var users []database.User
-	if err := database.DB.Select("username", "role").Find(&users).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
-		return
-	}
+	// // Retrieve all users.
+	// var users []database.User
+	// if err := database.DB.Select("username", "role").Find(&users).Error; err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
+	// 	return
+	// }
+
+    //  Load users and their Roles
+     var users []database.User
+     if err := database.DB.
+         Preload("Role").
+         Find(&users).Error; err != nil {
+         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
+         return
+     }
 
 	// Format response to include only username and role.
 	var userData []map[string]string
 	for _, user := range users {
 		userData = append(userData, map[string]string{
 			"username": user.Username,
-			"role":     user.Role,
+			"role":     user.Role.Name,
 		})
 	}
 

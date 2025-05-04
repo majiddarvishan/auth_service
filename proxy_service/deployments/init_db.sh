@@ -9,7 +9,7 @@ set -e
 # ------------------------------
 
 # Database configuration
-DB_HOST="172.23.10.73"
+DB_HOST="192.168.1.186"
 DB_PORT="5432"
 DB_USER="postgres"
 DB_PASSWORD="postgres"
@@ -17,7 +17,7 @@ DB_NAME="mydb"
 
 # Admin user configuration
 ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="verysecurepassword"  # Use a secure method to provide/manage this
+ADMIN_PASSWORD="admin"  # Use a secure method to provide/manage this
 
 # ------------------------------
 # Generate Bcrypt Hash for the Admin Password
@@ -59,8 +59,8 @@ echo "Admin role ensured in the database."
 # SQL Query to Ensure Default Admin User
 # ------------------------------
 SQL_QUERY="
-INSERT INTO users (username, password, role)
-VALUES ('${ADMIN_USERNAME}', '${ADMIN_PASSWORD_HASH}', 'admin')
+INSERT INTO users (username, password, role_id)
+VALUES ('${ADMIN_USERNAME}', '${ADMIN_PASSWORD_HASH}', 1)
 ON CONFLICT (username) DO NOTHING;
 "
 
