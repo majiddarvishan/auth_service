@@ -19,7 +19,7 @@ import (
 // @license.url https://opensource.org/licenses/MIT
 
 // @host localhost:8080
-// @BasePath /
+// @BasePath /v1/api
 func main() {
 	// Load configuration from .env.
 	config.LoadConfig()

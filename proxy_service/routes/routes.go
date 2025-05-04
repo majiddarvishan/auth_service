@@ -1,9 +1,11 @@
 package routes
 
 import (
+	"auth_service/config"
 	"auth_service/handlers"
 	"auth_service/middleware"
 	"log"
+
 	// "fmt"
 	// "net"
 	// "strings"
@@ -22,7 +24,7 @@ import (
 // Explicit CORS middleware for captcha endpoints
 func CaptchaCorsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
@@ -80,6 +82,12 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		}
 	})
 
+    rootGroup := httpsRouter.Group(config.BaseApi)
+
+    // Create a dedicated group for dynamic endpoints.
+	var dynamicGroup *gin.RouterGroup = httpsRouter.Group(config.BaseApi)
+
+
 	// Only redirect non-captcha routes to HTTPS
 	// httpRouter.NoRoute(func(c *gin.Context) {
 	//     if !strings.HasPrefix(c.Request.URL.Path, "/captcha/") {
@@ -96,7 +104,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// })
 
 	// redirect /swagger to /swagger/index.html
-	httpsRouter.GET("/swagger", func(c *gin.Context) {
+	rootGroup.GET("/swagger", func(c *gin.Context) {
         c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
 	})
 	// also catch the slash variant if you like
@@ -108,20 +116,17 @@ func SetupRoutes(httpAddr, httpsAddr string) {
     //     c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
     // })
 
-    httpsRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+    rootGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	httpsRouter.POST("/login", handlers.LoginHandler)
+	rootGroup.POST("/login", handlers.LoginHandler)
 
-	httpsRouter.GET("/admin",
+	rootGroup.GET("/admin",
 		middleware.AuthMiddleware,          // Ensure user is authenticated.
 		middleware.RoleMiddleware("admin"), // Ensure only admins can access.
 		handlers.AdminDashboardHandler,
 	)
 
-	// Create a dedicated group for dynamic endpoints.
-	var dynamicGroup *gin.RouterGroup = httpsRouter.Group("/") // or some subpath like "/dynamic"
-
-	httpsRouter.POST("/admin/customendpoints",
+	rootGroup.POST("/admin/customendpoints",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.CreateCustomEndpointHandler(dynamicGroup),
@@ -134,37 +139,37 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// )
 
 	// Dynamically register the custom endpoints from the database.
-	handlers.RegisterCustomEndpoints(httpsRouter)
+	handlers.RegisterCustomEndpoints(rootGroup)
 
 	// Add new User Endpoint (Admin Only)
-	httpsRouter.POST("/users",
+	rootGroup.POST("/users",
 		middleware.AuthMiddleware,          // Ensure the request is authenticated.
 		middleware.RoleMiddleware("admin"), // Ensure the requester is an admin.
 		handlers.RegisterHandler,           // Handler to create a new user.
 	)
 
 	// DELETE User Endpoint (Admin Only)
-	httpsRouter.DELETE("/users/:username",
+	rootGroup.DELETE("/users/:username",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.DeleteUserHandler,
 	)
 
 	// Update User Role (Admin Only)
-	httpsRouter.PUT("/users/:username/role",
+	rootGroup.PUT("/users/:username/role",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.UpdateUserRoleHandler,
 	)
 
 	// Create New Role (Admin Only)
-	httpsRouter.POST("/roles",
+	rootGroup.POST("/roles",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.CreateRoleHandler,
 	)
 
-	httpsRouter.GET("/roles",
+	rootGroup.GET("/roles",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.GetRolesHandler,

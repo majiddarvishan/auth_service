@@ -41,7 +41,9 @@ func registerCustomEndpointDynamic(r *gin.RouterGroup, ep *database.CustomEndpoi
 	log.Printf("Registered dynamic route: %s [%s] -> %s", ep.Path, ep.Method, ep.Endpoints[0])
 }
 
-func RegisterCustomEndpoints(r *gin.Engine) {
+// func RegisterCustomEndpoints(r *gin.Engine) {
+func RegisterCustomEndpoints(routerGroup *gin.RouterGroup) {
+
 	var endpoints []database.CustomEndpoint
 	if err := database.DB.Where("enabled = ?", true).Find(&endpoints).Error; err != nil {
 		log.Println("Error fetching custom endpoints:", err)
@@ -49,7 +51,7 @@ func RegisterCustomEndpoints(r *gin.Engine) {
 	}
 
 	for _, endpoint := range endpoints {
-		registerCustomEndpointDynamic(&r.RouterGroup, &endpoint)
+		registerCustomEndpointDynamic(routerGroup, &endpoint)
 	}
 }
 
