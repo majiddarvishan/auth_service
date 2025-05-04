@@ -59,7 +59,7 @@ func main() {
             return
         }
 
-		user, ok := claims["sub"].(string)
+		user, ok := claims["user"].(string)
 		if !ok {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Username not present in token"})
 			c.Abort()

@@ -24,7 +24,7 @@
 //             return
 //         }
 
-//         username, ok := claims["sub"].(string)
+//         username, ok := claims["user"].(string)
 //         if !ok {
 //             c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username in token"})
 //             c.Abort()
@@ -97,7 +97,7 @@ func DynamicAccountingMiddleware(c *gin.Context) {
         c.Abort()
         return
     }
-    username, ok := claims["sub"].(string)
+    username, ok := claims["user"].(string)
     if !ok {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username in token"})
         c.Abort()
