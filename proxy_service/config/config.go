@@ -11,6 +11,9 @@ import (
 var (
 	BaseApi string
 
+	// TLSPath is used for read TLS files from that path.
+	TLSPath string
+
 	// SecretKey is used for signing JWT tokens.
 	SecretKey string
 
@@ -41,6 +44,11 @@ func LoadConfig() {
 	BaseApi = os.Getenv("BASE_API")
 	if BaseApi == "" {
 		log.Fatal("BASE_API is not set in .env file")
+	}
+
+	TLSPath = os.Getenv("TLS_PATH")
+	if BaseApi == "" {
+		log.Fatal("TLS_PATH is not set in .env file")
 	}
 
 	SecretKey = os.Getenv("SECRET_KEY")

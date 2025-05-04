@@ -7,17 +7,20 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
+      - ./tls:/etc/tls:ro
     environment:
+      - BASE_API=/v1/api
+      - TLS_PATH=/etc/tls
       - SECRET_KEY=f78973efc0c0664995e2bb055bb2cac6779597a5294685f069229c909358f54a
       - TOKEN_EXPIRATION_PERIOD=24h
-      - ACCOUNTING_ENDPOINT=http://localhost:8082
-      - DB_HOST=172.23.10.73
+      - ACCOUNTING_ENDPOINT=http://192.168.1.186:8082
+      - DB_HOST=192.168.1.186
       - DB_PORT=5432
       - DB_USER_NAME=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=mydb
     ports:
-      - 8080:8080
+      - 8443:8443
 
 volumes:
   output_data: {}

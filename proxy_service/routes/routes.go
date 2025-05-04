@@ -183,7 +183,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// }()
 	// if err := httpsRouter.RunTLS(httpsAddr, "cert.pem", "key.pem"); err != nil {
 	// if err := httpsRouter.RunTLS(httpsAddr, "localhost.pem", "localhost-key.pem"); err != nil {
-	if err := httpsRouter.RunTLS(httpsAddr, "172.26.249.184.pem", "172.26.249.184-key.pem"); err != nil {
+	if err := httpsRouter.RunTLS(httpsAddr, config.TLSPath + "/172.26.249.184.pem", config.TLSPath + "/172.26.249.184-key.pem"); err != nil {
 		log.Fatal("Failed to start HTTPS server:", err)
 	}
 }
