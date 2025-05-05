@@ -61,3 +61,9 @@ apt-get install postgresql
 ```bash
 apt-get install whois
 ```
+
+## Generate JWT_SECRET
+
+```bash
+openssl rand -hex 32
+```
