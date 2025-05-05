@@ -87,21 +87,11 @@ func AdminDashboardHandler(c *gin.Context) {
 		return
 	}
 
-	// // Retrieve all users.
-	// var users []database.User
-	// if err := database.DB.Select("username", "role").Find(&users).Error; err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
-	// 	return
-	// }
-
-    //  Load users and their Roles
-     var users []database.User
-     if err := database.DB.
-         Preload("Role").
-         Find(&users).Error; err != nil {
-         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
-         return
-     }
+    users, err := database.DB.GetAllUsers()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+        return
+    }
 
 	// Format response to include only username and role.
 	var userData []map[string]string
@@ -112,18 +102,10 @@ func AdminDashboardHandler(c *gin.Context) {
 		})
 	}
 
-	// Retrieve accounting rules (if applicable).
-	var rules []database.AccountingRule
-	if err := database.DB.Find(&rules).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve accounting rules"})
-		return
-	}
-
 	// Format response.
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Admin dashboard loaded successfully",
 		"users":   userData,
-		"rules":   rules,
 	})
 }
 

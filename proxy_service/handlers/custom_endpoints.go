@@ -43,9 +43,8 @@ func registerCustomEndpointDynamic(r *gin.RouterGroup, ep *database.CustomEndpoi
 
 // func RegisterCustomEndpoints(r *gin.Engine) {
 func RegisterCustomEndpoints(routerGroup *gin.RouterGroup) {
-
-	var endpoints []database.CustomEndpoint
-	if err := database.DB.Where("enabled = ?", true).Find(&endpoints).Error; err != nil {
+	endpoints, err := database.DB.GetAllCustomEndpoints()
+	if err != nil {
 		log.Println("Error fetching custom endpoints:", err)
 		return
 	}
@@ -104,10 +103,10 @@ func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc 
 		req.Path += "/*path"
 		req.Enabled = true
 
-		if err := database.DB.Create(&req).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create custom endpoint"})
+        if err := database.DB.CreateCustomEndpoint(&req); err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create custom endpoint"})
 			return
-		}
+        }
 
 		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint created successfully", "endpoint": req})
 

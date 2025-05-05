@@ -55,15 +55,15 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-    // Use provided role or assign a default role.
+	// Use provided role or assign a default role.
 	roleName := req.Role
 	if roleName == "" {
 		roleName = "guest"
 	}
 
-    // Look up the role in the database.
-	var role database.Role
-	if err := database.DB.Where("name = ?", roleName).First(&role).Error; err != nil {
+	// Look up the role in the database.
+	role, err := database.DB.GetRoleByName(roleName)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Role not found"})
 		return
 	}
@@ -87,7 +87,7 @@ func RegisterHandler(c *gin.Context) {
 	// }
 
 	// Create user in the database.
-	if err := database.DB.Create(&user).Error; err != nil {
+	if err := database.DB.CreateUser(&user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user", "details": err.Error()})
 		return
 	}
@@ -145,15 +145,12 @@ func LoginHandler(c *gin.Context) {
 	// 	return
 	// }
 
-     // Fetch user *and* its Role in one go:
-     var user database.User
-     if err := database.DB.
-         Preload("Role").
-         Where("username = ?", req.Username).
-         First(&user).Error; err != nil {
-         c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-         return
-     }
+	// Fetch user *and* its Role in one go:
+    user, err := database.DB.GetUserAndRoleByUsername(req.Username)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+        return
+    }
 
 	// Compare the stored hashed password with the incoming password.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
@@ -164,7 +161,7 @@ func LoginHandler(c *gin.Context) {
 	// Create JWT claims: subject, role, and expiry.
 	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
 	claims := jwt.MapClaims{
-		"user":  user.Username,
+		"user": user.Username,
 		"role": user.Role.Name,
 		"exp":  expirationTime.Unix(),
 	}
@@ -199,24 +196,11 @@ func DeleteUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Find the user in the database.
-	var user database.User
-	if err := database.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+    err := database.DB.DeleteUserByUsername(username)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
 		return
-	}
-
-	// Soft delete the user .
-	if err := database.DB.Delete(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
-		return
-	}
-
-	// Permanently delete the user to clear the unique constraint.
-	// if err := database.DB.Unscoped().Delete(&user).Error; err != nil {
-	//     c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
-	//     return
-	// }
+    }
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
@@ -261,24 +245,8 @@ func UpdateUserRoleHandler(c *gin.Context) {
 		return
 	}
 
-	// Find user by username.
-	var user database.User
-	if err := database.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-    // Look up the role in the database.
-	var role database.Role
-	if err := database.DB.Where("name = ?", req.Role).First(&role).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Role not found"})
-		return
-	}
-
-	// Update the user's role.
-	user.RoleID = role.ID
-
-	if err := database.DB.Save(&user).Error; err != nil {
+    err := database.DB.UpdateUserRoleByUsername(username, req.Role)
+    if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role", "details": err.Error()})
 		return
 	}

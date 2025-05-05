@@ -15,8 +15,9 @@ type PGStore struct {
 
 // NewPGStore creates a GORM-based Store.
 func NewPGStore() *PGStore {
-    return &PGStore{}
+	return &PGStore{}
 }
+
 // InitDB initializes the database and performs migrations.
 func (s *PGStore) Init() error {
 	var err error
@@ -35,7 +36,7 @@ func (s *PGStore) Init() error {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
 
-    return nil
+	return nil
 }
 
 func (s *PGStore) CreateUser(u *User) error {
@@ -58,6 +59,53 @@ func (s *PGStore) GetUserByUsername(username string) (*User, error) {
 	return &u, nil
 }
 
+func (s *PGStore) GetUserAndRoleByUsername(username string) (*User, error) {
+	var u User
+	if err := s.db.
+		Preload("Role").
+		Where("username = ?", username).
+		First(&u).Error; err != nil {
+		return nil, fmt.Errorf("User not found")
+	}
+
+	return &u, nil
+}
+
+func (s *PGStore) UpdateUserRoleByUsername(username, roleName string) error {
+    // Find user by username.
+	var user User
+	if err := s.db.Where("username = ?", username).First(&user).Error; err != nil {
+		return fmt.Errorf("User not found")
+	}
+
+	// Look up the role in the database.
+	var role Role
+	if err := s.db.Where("name = ?", roleName).First(&role).Error; err != nil {
+		return fmt.Errorf("Role not found")
+	}
+
+	// Update the user's role.
+	user.RoleID = role.ID
+
+	if err := s.db.Save(&user).Error; err != nil {
+		return err
+	}
+
+    return nil
+}
+
+func (s *PGStore) GetAllUsers() ([]User, error) {
+	//  Load users and their Roles
+	var users []User
+	if err := s.db.
+		Preload("Role").
+		Find(&users).Error; err != nil {
+		return nil, fmt.Errorf("Failed to retrieve users")
+	}
+
+	return users, nil
+}
+
 func (s *PGStore) UpdateUser(u *User) error {
 	return s.db.Save(u).Error
 }
@@ -66,8 +114,32 @@ func (s *PGStore) DeleteUser(id uint) error {
 	return s.db.Delete(&User{}, id).Error
 }
 
+func (s *PGStore) DeleteUserByUsername(username string) error {
+	// Find the user in the database.
+	var user User
+	if err := s.db.Where("username = ?", username).First(&user).Error; err != nil {
+		return fmt.Errorf("User not found")
+	}
+
+	// Soft delete the user .
+	if err := s.db.Delete(&user).Error; err != nil {
+		return err
+	}
+
+	// Permanently delete the user to clear the unique constraint.
+	// if err := database.DB.Unscoped().Delete(&user).Error; err != nil {
+	//     c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
+	//     return
+	// }
+
+	return nil
+}
+
 // Role
-func (s *PGStore) CreateRole(r *Role) error { return s.db.Create(r).Error }
+func (s *PGStore) CreateRole(r *Role) error {
+	return s.db.Create(r).Error
+}
+
 func (s *PGStore) GetRoleByID(id uint) (*Role, error) {
 	var r Role
 	if err := s.db.First(&r, id).Error; err != nil {
@@ -82,8 +154,23 @@ func (s *PGStore) GetRoleByName(name string) (*Role, error) {
 	}
 	return &r, nil
 }
-func (s *PGStore) UpdateRole(r *Role) error { return s.db.Save(r).Error }
-func (s *PGStore) DeleteRole(id uint) error { return s.db.Delete(&Role{}, id).Error }
+
+func (s *PGStore) GetAllRoles() ([]Role, error) {
+	var roles []Role
+	if err := s.db.Find(&roles).Error; err != nil {
+		return nil, err
+	}
+
+	return roles, nil
+}
+
+func (s *PGStore) UpdateRole(r *Role) error {
+	return s.db.Save(r).Error
+}
+
+func (s *PGStore) DeleteRole(id uint) error {
+	return s.db.Delete(&Role{}, id).Error
+}
 
 // AccountingRule
 func (s *PGStore) CreateAccountingRule(a *AccountingRule) error { return s.db.Create(a).Error }
@@ -101,13 +188,20 @@ func (s *PGStore) GetAccountingRuleByEndpoint(endpoint string) (*AccountingRule,
 	}
 	return &a, nil
 }
-func (s *PGStore) UpdateAccountingRule(a *AccountingRule) error { return s.db.Save(a).Error }
+
+func (s *PGStore) UpdateAccountingRule(a *AccountingRule) error {
+	return s.db.Save(a).Error
+}
+
 func (s *PGStore) DeleteAccountingRule(id uint) error {
 	return s.db.Delete(&AccountingRule{}, id).Error
 }
 
 // CustomEndpoint
-func (s *PGStore) CreateCustomEndpoint(c *CustomEndpoint) error { return s.db.Create(c).Error }
+func (s *PGStore) CreateCustomEndpoint(c *CustomEndpoint) error {
+	return s.db.Create(c).Error
+}
+
 func (s *PGStore) GetCustomEndpointByID(id uint) (*CustomEndpoint, error) {
 	var c CustomEndpoint
 	if err := s.db.First(&c, id).Error; err != nil {
@@ -115,6 +209,7 @@ func (s *PGStore) GetCustomEndpointByID(id uint) (*CustomEndpoint, error) {
 	}
 	return &c, nil
 }
+
 func (s *PGStore) GetCustomEndpointByPath(path string) (*CustomEndpoint, error) {
 	var c CustomEndpoint
 	if err := s.db.Where("path = ?", path).First(&c).Error; err != nil {
@@ -122,7 +217,18 @@ func (s *PGStore) GetCustomEndpointByPath(path string) (*CustomEndpoint, error) 
 	}
 	return &c, nil
 }
+
+func (s *PGStore) GetAllCustomEndpoints() ([]CustomEndpoint, error) {
+	var endpoints []CustomEndpoint
+	if err := s.db.Where("enabled = ?", true).Find(&endpoints).Error; err != nil {
+		return nil, err
+	}
+
+	return endpoints, nil
+}
+
 func (s *PGStore) UpdateCustomEndpoint(c *CustomEndpoint) error { return s.db.Save(c).Error }
+
 func (s *PGStore) DeleteCustomEndpoint(id uint) error {
 	return s.db.Delete(&CustomEndpoint{}, id).Error
 }

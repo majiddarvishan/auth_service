@@ -85,7 +85,8 @@ func CreateRoleHandler(c *gin.Context) {
 		Name:        req.Name,
 		Description: req.Description,
 	}
-	if err := database.DB.Create(&role).Error; err != nil {
+
+	if err := database.DB.CreateRole(&role); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create role", "details": err.Error()})
 		return
 	}
@@ -102,8 +103,8 @@ func CreateRoleHandler(c *gin.Context) {
 // @Failure      500  {object}  ErrorResponse
 // @Router       /roles [get]
 func GetRolesHandler(c *gin.Context) {
-    var roles []database.Role
-    if err := database.DB.Find(&roles).Error; err != nil {
+    roles, err := database.DB.GetAllRoles()
+    if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch roles"})
         return
     }

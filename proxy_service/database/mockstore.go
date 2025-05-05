@@ -65,6 +65,26 @@ func (m *MockStore) GetUserByUsername(username string) (*User, error) {
 	return nil, errors.New("user not found")
 }
 
+func (m *MockStore) GetUserAndRoleByUsername(username string) (*User, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, u := range m.users {
+		if u.Username == username {
+			return u, nil
+		}
+	}
+	return nil, errors.New("user not found")
+}
+
+func (m *MockStore) UpdateUserRoleByUsername(username, roleName string) error {
+	return nil
+}
+
+func (m *MockStore) GetAllUsers() ([]User, error) {
+	return nil, nil
+
+}
+
 func (m *MockStore) UpdateUser(u *User) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -82,6 +102,10 @@ func (m *MockStore) DeleteUser(id uint) error {
 		return errors.New("user not found")
 	}
 	delete(m.users, id)
+	return nil
+}
+
+func (m *MockStore) DeleteUserByUsername(username string) error {
 	return nil
 }
 
@@ -112,6 +136,10 @@ func (m *MockStore) GetRoleByName(name string) (*Role, error) {
 		}
 	}
 	return nil, errors.New("role not found")
+}
+
+func (m *MockStore) GetAllRoles() ([]Role, error) {
+	return nil, nil
 }
 
 func (m *MockStore) UpdateRole(r *Role) error {
@@ -210,6 +238,11 @@ func (m *MockStore) GetCustomEndpointByPath(path string) (*CustomEndpoint, error
 		}
 	}
 	return nil, errors.New("custom endpoint not found")
+}
+
+func (m *MockStore) GetAllCustomEndpoints() ([]CustomEndpoint, error) {
+	var endpoints []CustomEndpoint
+	return endpoints, nil
 }
 
 func (m *MockStore) UpdateCustomEndpoint(c *CustomEndpoint) error {

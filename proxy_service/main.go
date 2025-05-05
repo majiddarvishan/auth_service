@@ -4,6 +4,7 @@ import (
 	"auth_service/config"
 	"auth_service/database"
 	"auth_service/routes"
+	"fmt"
 )
 
 // @title Auth service API
@@ -25,7 +26,14 @@ func main() {
 	config.LoadConfig()
 
 	// Initialize the database.
-	database.InitDB()
+	// database.InitDB()
+    // _, err := database.NewStore("mock")
+    _, err := database.NewStore("postgres")
+    if(err != nil){
+        fmt.Println("Error in creating databse connection")
+        return
+    }
+
 
 	// Setup routes.
 	routes.SetupRoutes(":8080", ":8443")

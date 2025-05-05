@@ -9,7 +9,7 @@ set -e
 # ------------------------------
 
 # Database configuration
-DB_HOST="192.168.1.186"
+DB_HOST="localhost"
 DB_PORT="5432"
 DB_USER="postgres"
 DB_PASSWORD="postgres"
@@ -35,6 +35,22 @@ fi
 
 # Export the password so that psql can use it
 export PGPASSWORD="${DB_PASSWORD}"
+
+# Check if the database already exists by querying the pg_database catalog.
+DB_EXISTS=$(psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';")
+
+if [ "$DB_EXISTS" = "1" ]; then
+    echo "Database '${DB_NAME}' already exists."
+else
+    echo "Database '${DB_NAME}' does not exist. Creating it..."
+    psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -c "CREATE DATABASE ${DB_NAME};"
+
+    if [ $? -eq 0 ]; then
+        echo "Database '${DB_NAME}' created successfully."
+    else
+        echo "Error creating database '${DB_NAME}'."
+    fi
+fi
 
 # ------------------------------
 # SQL: Insert Admin Role

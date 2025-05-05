@@ -49,3 +49,15 @@ pandoc output.adoc -o output.docx
 
 pip install python-docx
 python swagger2docx.py
+
+## Install PostgreSQL
+
+```bash
+apt-get install postgresql
+```
+
+## Install mkpasswd
+
+```bash
+apt-get install whois
+```
