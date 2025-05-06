@@ -104,8 +104,8 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="container py-4 bg-light">
-      <h2 className="mb-4 text-center text-success">Admin Dashboard</h2>
+    <div className="container py-4" style={{ backgroundColor: '#f8f9fa', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
+      <h2 className="mb-4 text-center" style={{ color: '#6c5ce7' }}>Admin Dashboard</h2>
 
       <ul className="nav nav-tabs mb-4" id="adminTabs" role="tablist">
         <li className="nav-item" role="presentation">
@@ -132,7 +132,7 @@ const AdminDashboard = () => {
         {/* Users List Tab */}
         <div className="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
           <div className="card">
-            <div className="card-header bg-success text-white">
+            <div className="card-header" style={{ backgroundColor: '#6c5ce7', color: 'white' }}>
               <h3 className="mb-0">User List</h3>
             </div>
             <div className="card-body">
@@ -159,7 +159,7 @@ const AdminDashboard = () => {
         {/* Update User Role Tab */}
         <div className="tab-pane fade" id="update-role" role="tabpanel" aria-labelledby="update-role-tab">
           <div className="card">
-            <div className="card-header bg-success text-white">
+            <div className="card-header" style={{ backgroundColor: '#6c5ce7', color: 'white' }}>
               <h3 className="mb-0">Update User Role</h3>
             </div>
             <div className="card-body">
@@ -195,7 +195,7 @@ const AdminDashboard = () => {
                 </select>
               </div>
 
-              <button className="btn btn-success" onClick={handleRoleChange}>
+              <button className="btn" style={{ backgroundColor: '#6c5ce7', color: 'white' }} onClick={handleRoleChange}>
                 Update Role
               </button>
             </div>
@@ -205,7 +205,7 @@ const AdminDashboard = () => {
         {/* Set User Charge Tab */}
         <div className="tab-pane fade" id="set-charge" role="tabpanel" aria-labelledby="set-charge-tab">
           <div className="card">
-            <div className="card-header bg-success text-white">
+            <div className="card-header" style={{ backgroundColor: '#6c5ce7', color: 'white' }}>
               <h3 className="mb-0">Set User Charge</h3>
             </div>
             <div className="card-body">
@@ -235,7 +235,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setChargeValue(e.target.value)}
                 />
               </div>
-              <button className="btn btn-success" onClick={handleSetCharge}>
+              <button className="btn" style={{ backgroundColor: '#6c5ce7', color: 'white' }} onClick={handleSetCharge}>
                 Set Charge
               </button>
             </div>
@@ -245,7 +245,7 @@ const AdminDashboard = () => {
         {/* New Role Definition Tab */}
         <div className="tab-pane fade" id="new-role" role="tabpanel" aria-labelledby="new-role-tab">
           <div className="card">
-            <div className="card-header bg-success text-white">
+            <div className="card-header" style={{ backgroundColor: '#6c5ce7', color: 'white' }}>
               <h3 className="mb-0">Define New Role</h3>
             </div>
             <div className="card-body">
@@ -257,7 +257,7 @@ const AdminDashboard = () => {
         {/* New User Creation Tab */}
         <div className="tab-pane fade" id="new-user" role="tabpanel" aria-labelledby="new-user-tab">
           <div className="card">
-            <div className="card-header bg-success text-white">
+            <div className="card-header" style={{ backgroundColor: '#6c5ce7', color: 'white' }}>
               <h3 className="mb-0">Create New User</h3>
             </div>
             <div className="card-body">
@@ -269,7 +269,7 @@ const AdminDashboard = () => {
         {/* Dynamic Route Creation Tab */}
         <div className="tab-pane fade" id="dynamic-route" role="tabpanel" aria-labelledby="dynamic-route-tab">
           <div className="card">
-            <div className="card-header bg-success text-white">
+            <div className="card-header" style={{ backgroundColor: '#6c5ce7', color: 'white' }}>
               <h3 className="mb-0">Define New Dynamic Route</h3>
             </div>
             <div className="card-body">
