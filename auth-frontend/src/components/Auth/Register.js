@@ -1,13 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from '../../services/api';
 
 const Register = () => {
-  const [form, setForm] = useState({ username: "", password: "", role: "user" });
+  const [form, setForm] = useState({ username: "", password: "", role: "" });
+  const [availableRoles, setAvailableRoles] = useState([]);
+
+  // Fetch roles from API when the component mounts
+  useEffect(() => {
+    async function fetchRoles() {
+      try {
+        const response = await api.get("/roles", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        // Assuming response.data.roles is an array of role objects
+        setAvailableRoles(response.data.roles);
+      } catch (error) {
+        alert("Failed to load roles");
+      }
+    }
+
+    fetchRoles();
+  }, []); // Empty dependency array to run only once after the component mounts
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/register", form);
+      await api.post("/users", form);
       alert("Registered successfully!");
     } catch (error) {
       alert("Registration failed");
@@ -52,9 +70,14 @@ const Register = () => {
               className="form-select"
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
+              required
             >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
+              <option value="" disabled>Select a role</option>
+              {availableRoles.map((role) => (
+                <option key={role.ID} value={role.Name}>
+                  {role.Name}
+                </option>
+              ))}
             </select>
           </div>
 
