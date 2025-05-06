@@ -56,7 +56,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// httpRouter.Use(cors.New(corsConfig))
 
 	// Create a separate group for captcha endpoints with explicit CORS
-	captchaGroup := httpsRouter.Group("/captcha")
+	captchaGroup := httpsRouter.Group(config.BaseApi + "/captcha")
 	captchaGroup.Use(CaptchaCorsMiddleware())
 
 	// Handle OPTIONS requests explicitly for captcha endpoints

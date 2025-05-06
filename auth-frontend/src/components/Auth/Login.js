@@ -20,8 +20,8 @@ import api from '../../services/api';
 
 const Login = () => {
   const [form, setForm] = useState({ username: "", password: "" });
-//   const [captchaData, setCaptchaData] = useState({ id: null, image: null });
-//   const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaData, setCaptchaData] = useState({ id: null, image: null });
+  const [captchaInput, setCaptchaInput] = useState("");
   const navigate = useNavigate();
 
   // Optionally set axios base URL
@@ -30,40 +30,44 @@ const Login = () => {
   // }, []);
 
   // Fetch a new captcha from backend
-//   const loadCaptcha = async () => {
-//     try {
-//       const response = await axios.get("/captcha/new");
-//       // Expecting { id: string, image: base64String }
-//       setCaptchaData(response.data);
-//       setCaptchaInput("");
-//     } catch (err) {
-//       console.error("Failed to load captcha", err);
-//     }
-//   };
+  const loadCaptcha = async () => {
+    try {
+      const response = await api.get("/captcha/new");
+      // Expecting { id: string, image: base64String }
+      const captchaId = response.data.captchaId;
+      const imageResponse = await api.get(`/captcha/image/${captchaId}`, { responseType: 'arraybuffer' });
+      const base64Image = btoa(
+        new Uint8Array(imageResponse.data)
+          .reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
+      setCaptchaData({ id: captchaId, image: base64Image });
+      setCaptchaInput("");
+    } catch (err) {
+      console.error("Failed to load captcha", err);
+    }
+  };
 
-//   useEffect(() => {
-//     loadCaptcha();
-//   }, []);
+  useEffect(() => {
+    loadCaptcha();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // if (!captchaInput) {
-    //   alert("Please enter the captcha");
-    //   return;
-    // }
+    if (!captchaInput) {
+      alert("Please enter the captcha");
+      return;
+    }
 
     try {
-    //   const payload = {
-    //     ...form,
-    //     captchaId: captchaData.id,
-    //     captchaText: captchaInput,
-    //   };
-
-    //   const response = await axios.post("/login", payload);
+      const payload = {
+        ...form,
+        captchaId: captchaData.id,
+        captchaSolution: captchaInput,
+      };
 
       // Use the custom axios instance with SSL validation disabled
-      const response = await api.post("/login", form, {
+      const response = await api.post("/login", payload, {
         // This tells axios to accept the response regardless of status code
         validateStatus: () => true
       });
@@ -86,7 +90,7 @@ const Login = () => {
       console.error("Login error:", error);
       alert(error.message || "Login failed");
       // refresh captcha on failure
-    //   loadCaptcha();
+      loadCaptcha();
     }
   };
 
@@ -111,7 +115,7 @@ const Login = () => {
           className="form-control mb-3"
         />
 
-        {/* {captchaData.image && (
+        {captchaData.image && (
           <div className="mb-3 text-center">
             <img
               src={`data:image/png;base64,${captchaData.image}`}
@@ -130,7 +134,7 @@ const Login = () => {
           onChange={(e) => setCaptchaInput(e.target.value)}
           required
           className="form-control mb-3"
-        /> */}
+        />
 
         <button type="submit" className="btn btn-primary w-100">
           Login

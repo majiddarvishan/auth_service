@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"time"
 
 	"auth_service/config"
 	"auth_service/database"
 
-	// "github.com/dchest/captcha"
+	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -128,24 +129,17 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	// if req.CaptchaId == "" || req.CaptchaSolution == "" {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha is required"})
-	// 	return
-	// }
+	if req.CaptchaId == "" || req.CaptchaSolution == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha is required"})
+		return
+	}
 
-	// if !captcha.VerifyString(req.CaptchaId, req.CaptchaSolution) {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha verification failed"})
-	// 	return
-	// }
+	if !captcha.VerifyString(req.CaptchaId, req.CaptchaSolution) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha verification failed"})
+		return
+	}
 
-	// Look up the user by username.
-	// var user database.User
-	// if err := database.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
-	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-	// 	return
-	// }
-
-	// Fetch user *and* its Role in one go:
+	// Fetch user and its Role in one go:
     user, err := database.DB.GetUserAndRoleByUsername(req.Username)
     if err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
