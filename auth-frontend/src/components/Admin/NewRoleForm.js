@@ -25,7 +25,6 @@ const NewRoleForm = () => {
 
   return (
     <div className="mt-5">
-      <h3>Define New Role</h3>
       <form onSubmit={handleCreateRole}>
         <div className="mb-3">
           <label className="form-label">Role Name</label>

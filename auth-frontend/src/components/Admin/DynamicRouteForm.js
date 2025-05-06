@@ -52,7 +52,6 @@ const DynamicRouteForm = () => {
 
   return (
     <div className="mt-4">
-      <h3>Define New Dynamic Route</h3>
       <form onSubmit={handleCreateRoute}>
         <div className="mb-3">
           <label className="form-label">Path:</label>

@@ -112,16 +112,16 @@ const AdminDashboard = () => {
           <button className="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="true">Users</button>
         </li>
         <li className="nav-item" role="presentation">
-          <button className="nav-link" id="update-role-tab" data-bs-toggle="tab" data-bs-target="#update-role" type="button" role="tab" aria-controls="update-role" aria-selected="false">Update Role</button>
+          <button className="nav-link" id="new-user-tab" data-bs-toggle="tab" data-bs-target="#new-user" type="button" role="tab" aria-controls="new-user" aria-selected="false">New User</button>
         </li>
         <li className="nav-item" role="presentation">
           <button className="nav-link" id="set-charge-tab" data-bs-toggle="tab" data-bs-target="#set-charge" type="button" role="tab" aria-controls="set-charge" aria-selected="false">Set Charge</button>
         </li>
         <li className="nav-item" role="presentation">
-          <button className="nav-link" id="new-role-tab" data-bs-toggle="tab" data-bs-target="#new-role" type="button" role="tab" aria-controls="new-role" aria-selected="false">New Role</button>
+          <button className="nav-link" id="update-role-tab" data-bs-toggle="tab" data-bs-target="#update-role" type="button" role="tab" aria-controls="update-role" aria-selected="false">Update Role</button>
         </li>
         <li className="nav-item" role="presentation">
-          <button className="nav-link" id="new-user-tab" data-bs-toggle="tab" data-bs-target="#new-user" type="button" role="tab" aria-controls="new-user" aria-selected="false">New User</button>
+          <button className="nav-link" id="new-role-tab" data-bs-toggle="tab" data-bs-target="#new-role" type="button" role="tab" aria-controls="new-role" aria-selected="false">New Role</button>
         </li>
         <li className="nav-item" role="presentation">
           <button className="nav-link" id="dynamic-route-tab" data-bs-toggle="tab" data-bs-target="#dynamic-route" type="button" role="tab" aria-controls="dynamic-route" aria-selected="false">Dynamic Route</button>
@@ -246,19 +246,19 @@ const AdminDashboard = () => {
         <div className="tab-pane fade" id="new-role" role="tabpanel" aria-labelledby="new-role-tab">
           <div className="card">
             <div className="card-header">
-              <h3 className="mb-0">New Role Definition</h3>
+              <h3 className="mb-0">Define New Role</h3>
             </div>
             <div className="card-body">
               <NewRoleForm />
             </div>
           </div>
         </div>
-
+       
         {/* New User Creation Tab */}
         <div className="tab-pane fade" id="new-user" role="tabpanel" aria-labelledby="new-user-tab">
           <div className="card">
             <div className="card-header">
-              <h3 className="mb-0">New User Creation</h3>
+              <h3 className="mb-0">Create New User</h3>
             </div>
             <div className="card-body">
               <NewUserForm />
@@ -270,7 +270,7 @@ const AdminDashboard = () => {
         <div className="tab-pane fade" id="dynamic-route" role="tabpanel" aria-labelledby="dynamic-route-tab">
           <div className="card">
             <div className="card-header">
-              <h3 className="mb-0">Dynamic Route Creation</h3>
+              <h3 className="mb-0">Define New Dynamic Route</h3>
             </div>
             <div className="card-body">
               <DynamicRouteForm />

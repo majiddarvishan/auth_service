@@ -53,7 +53,6 @@ const NewUserForm = () => {
 
   return (
     <div className="mt-5">
-      <h3>Create New User</h3>
       <form onSubmit={handleCreateUser}>
         <div className="mb-3">
           <label className="form-label">Username</label>
