@@ -2,12 +2,31 @@ import React, { useState } from "react";
 import api from '../services/api';
 
 const SendSMS = () => {
-  const [form, setForm] = useState({ recipient: "", message: "" });
+  const [form, setForm] = useState({
+    senders: "",
+    receivers: "",
+    text: "",
+    track_ids: ""
+  });
+
+  const countLines = (value) =>
+    value
+      .split('\n')
+      .map(v => v.trim())
+      .filter(Boolean).length;
 
   const handleSendSMS = async (e) => {
     e.preventDefault();
+
+    const payload = {
+      senders: form.senders.split('\n').map(s => s.trim()).filter(Boolean),
+      receivers: form.receivers.split('\n').map(r => r.trim()).filter(Boolean),
+      text: form.text,
+      track_ids: form.track_ids.split('\n').map(t => t.trim()).filter(Boolean),
+    };
+
     try {
-      await api.post("/sms/sendsms", form, {
+      await api.post("/sms/sendsms", payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       alert("SMS sent!");
@@ -20,18 +39,38 @@ const SendSMS = () => {
     <div className="container mt-5">
       <h2>Send SMS</h2>
       <form onSubmit={handleSendSMS}>
-        <input
-          type="text"
-          placeholder="Recipient"
-          value={form.recipient}
-          onChange={(e) => setForm({ ...form, recipient: e.target.value })}
-        />
+        <label>Senders (one per line)</label>
         <textarea
-          placeholder="Message"
-          value={form.message}
-          onChange={(e) => setForm({ ...form, message: e.target.value })}
+          rows={4}
+          value={form.senders}
+          onChange={(e) => setForm({ ...form, senders: e.target.value })}
         />
-        <button type="submit" className="btn btn-warning">Send SMS</button>
+        <div>{countLines(form.senders)} sender(s)</div>
+
+        <label>Receivers (one per line)</label>
+        <textarea
+          rows={4}
+          value={form.receivers}
+          onChange={(e) => setForm({ ...form, receivers: e.target.value })}
+        />
+        <div>{countLines(form.receivers)} receiver(s)</div>
+
+        <label>Text</label>
+        <textarea
+          rows={4}
+          value={form.text}
+          onChange={(e) => setForm({ ...form, text: e.target.value })}
+        />
+
+        <label>Track IDs (one per line)</label>
+        <textarea
+          rows={4}
+          value={form.track_ids}
+          onChange={(e) => setForm({ ...form, track_ids: e.target.value })}
+        />
+        <div>{countLines(form.track_ids)} track ID(s)</div>
+
+        <button type="submit" className="btn btn-warning mt-3">Send SMS</button>
       </form>
     </div>
   );
