@@ -37,41 +37,61 @@ const SendSMS = () => {
 
   return (
     <div className="container mt-5">
-      <h2>Send SMS</h2>
-      <form onSubmit={handleSendSMS}>
-        <label>Senders (one per line)</label>
-        <textarea
-          rows={4}
-          value={form.senders}
-          onChange={(e) => setForm({ ...form, senders: e.target.value })}
-        />
-        <div>{countLines(form.senders)} sender(s)</div>
+      <div className="card shadow p-4">
+        <h3 className="mb-4 text-center">📨 Send Bulk SMS</h3>
+        <form onSubmit={handleSendSMS}>
+          <div className="mb-3">
+            <label className="form-label fw-bold">Senders (one per line)</label>
+            <textarea
+              className="form-control"
+              rows={3}
+              placeholder="e.g.\nsender1\nsender2"
+              value={form.senders}
+              onChange={(e) => setForm({ ...form, senders: e.target.value })}
+            />
+            <small className="text-muted">{countLines(form.senders)} sender(s)</small>
+          </div>
 
-        <label>Receivers (one per line)</label>
-        <textarea
-          rows={4}
-          value={form.receivers}
-          onChange={(e) => setForm({ ...form, receivers: e.target.value })}
-        />
-        <div>{countLines(form.receivers)} receiver(s)</div>
+          <div className="mb-3">
+            <label className="form-label fw-bold">Receivers (one per line)</label>
+            <textarea
+              className="form-control"
+              rows={3}
+              placeholder="e.g.\n+123456789\n+987654321"
+              value={form.receivers}
+              onChange={(e) => setForm({ ...form, receivers: e.target.value })}
+            />
+            <small className="text-muted">{countLines(form.receivers)} receiver(s)</small>
+          </div>
 
-        <label>Text</label>
-        <textarea
-          rows={4}
-          value={form.text}
-          onChange={(e) => setForm({ ...form, text: e.target.value })}
-        />
+          <div className="mb-3">
+            <label className="form-label fw-bold">Track IDs (one per line)</label>
+            <textarea
+              className="form-control"
+              rows={3}
+              placeholder="e.g.\nid123\nid456"
+              value={form.track_ids}
+              onChange={(e) => setForm({ ...form, track_ids: e.target.value })}
+            />
+            <small className="text-muted">{countLines(form.track_ids)} track ID(s)</small>
+          </div>
 
-        <label>Track IDs (one per line)</label>
-        <textarea
-          rows={4}
-          value={form.track_ids}
-          onChange={(e) => setForm({ ...form, track_ids: e.target.value })}
-        />
-        <div>{countLines(form.track_ids)} track ID(s)</div>
+          <div className="mb-3">
+            <label className="form-label fw-bold">Text</label>
+            <textarea
+              className="form-control"
+              rows={3}
+              placeholder="Type your message here..."
+              value={form.text}
+              onChange={(e) => setForm({ ...form, text: e.target.value })}
+            />
+          </div>
 
-        <button type="submit" className="btn btn-warning mt-3">Send SMS</button>
-      </form>
+          <div className="d-grid">
+            <button type="submit" className="btn btn-primary btn-lg">🚀 Send SMS</button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
