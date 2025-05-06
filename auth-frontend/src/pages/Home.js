@@ -10,7 +10,8 @@ const Home = () => {
       <div className="mt-4">
         <Link to="/login" className="btn btn-primary mx-2">Login</Link>
         <Link to="/register" className="btn btn-success mx-2">Register</Link>
-        <Link to="/dashboard" className="btn btn-warning mx-2">Admin Dashboard</Link>
+        <Link to="/sms" className="btn btn-warning mx-2">Send SMS</Link>
+        <Link to="/dashboard" className="btn btn-danger mx-2">Admin Dashboard</Link>
       </div>
     </div>
   );
