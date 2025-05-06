@@ -3,15 +3,27 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
-    <div className="container mt-5 text-center">
-      <h1>Welcome to the Authentication & Accounting System</h1>
-      <p>Manage users, track balances, and send SMS securely.</p>
+    <div className="container mt-5 d-flex justify-content-center">
+      <div className="card shadow-lg p-5 w-100" style={{ maxWidth: "600px" }}>
+        <h1 className="text-center mb-3">🔐 Welcome</h1>
+        <p className="text-center text-muted fs-5">
+          Manage users and send SMS securely with ease.
+        </p>
 
-      <div className="mt-4">
-        <Link to="/login" className="btn btn-primary mx-2">Login</Link>
-        <Link to="/register" className="btn btn-success mx-2">Register</Link>
-        <Link to="/sms" className="btn btn-warning mx-2">Send SMS</Link>
-        <Link to="/dashboard" className="btn btn-danger mx-2">Admin Dashboard</Link>
+        <div className="d-grid gap-3 mt-4">
+          <Link to="/login" className="btn btn-primary btn-lg">
+            🔑 Login
+          </Link>
+          <Link to="/register" className="btn btn-success btn-lg">
+            🧾 Register
+          </Link>
+          <Link to="/sms" className="btn btn-warning btn-lg text-white">
+            ✉️ Send SMS
+          </Link>
+          <Link to="/dashboard" className="btn btn-danger btn-lg">
+            🛠️ Admin Dashboard
+          </Link>
+        </div>
       </div>
     </div>
   );
