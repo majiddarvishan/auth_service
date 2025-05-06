@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./components/Auth/Login";
+import Register from "./components/Auth/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import SendSMS from "./pages/SendSMS";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -27,6 +28,14 @@ const App = () => {
           element={
             <ProtectedRoute allowedRole="user">
               <SendSMS />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <Register />
             </ProtectedRoute>
           }
         />

@@ -20,7 +20,7 @@ const Home = () => {
           <Link to="/sms" className="btn btn-warning btn-lg text-white">
             ✉️ Send SMS
           </Link>
-          <Link to="/dashboard" className="btn btn-danger btn-lg">
+          <Link to="/admin" className="btn btn-danger btn-lg">
             🛠️ Admin Dashboard
           </Link>
         </div>
