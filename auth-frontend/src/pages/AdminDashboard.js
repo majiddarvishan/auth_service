@@ -96,110 +96,145 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="container">
-      <h2>Admin Dashboard</h2>
+    <div className="container py-4">
+      <h2 className="mb-4 text-center">Admin Dashboard</h2>
 
       {/* Users List */}
-      <h3>User List</h3>
-      <table className="table table-bordered">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Role</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.username}>
-              <td>{user.username}</td>
-              <td>{user.role}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="card mb-4">
+        <div className="card-header">
+          <h3 className="mb-0">User List</h3>
+        </div>
+        <div className="card-body">
+          <table className="table table-bordered table-hover">
+            <thead className="table-light">
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.username}>
+                  <td>{user.username}</td>
+                  <td>{user.role}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Update User Role Section */}
-      <h3>Update User Role</h3>
-      <div className="mb-3">
-        <label className="form-label">Select User:</label>
-        <select
-          className="form-select"
-          onChange={(e) => setSelectedUserRole(e.target.value)}
-          defaultValue=""
-        >
-          <option value="" disabled>
-            -- Select User --
-          </option>
-          {users.map((user) => (
-            <option key={user.username} value={user.username}>
-              {user.username}
-            </option>
-          ))}
-        </select>
-      </div>
+      <div className="card mb-4">
+        <div className="card-header">
+          <h3 className="mb-0">Update User Role</h3>
+        </div>
+        <div className="card-body">
+          <div className="mb-3">
+            <label className="form-label">Select User:</label>
+            <select
+              className="form-select"
+              onChange={(e) => setSelectedUserRole(e.target.value)}
+              defaultValue=""
+            >
+              <option value="" disabled>-- Select User --</option>
+              {users.map((user) => (
+                <option key={user.username} value={user.username}>
+                  {user.username}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div className="mb-3">
-        <label className="form-label">Select New Role:</label>
-        <select
-          className="form-select"
-          value={newRole}
-          onChange={(e) => setNewRole(e.target.value)}
-        >
-          <option value="">-- Select Role --</option>
-          {availableRoles.map((role) => (
-            <option key={role.ID} value={role.Name}>
-              {role.Name}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div className="mb-3">
+            <label className="form-label">Select New Role:</label>
+            <select
+              className="form-select"
+              value={newRole}
+              onChange={(e) => setNewRole(e.target.value)}
+            >
+              <option value="">-- Select Role --</option>
+              {availableRoles.map((role) => (
+                <option key={role.ID} value={role.Name}>
+                  {role.Name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <button className="btn btn-primary" onClick={handleRoleChange}>
-        Update Role
-      </button>
+          <button className="btn btn-primary" onClick={handleRoleChange}>
+            Update Role
+          </button>
+        </div>
+      </div>
 
       {/* Set User Charge Section */}
-      <h3 className="mt-4">Set User Charge</h3>
-      <div className="mb-3">
-        <label className="form-label">Select User:</label>
-        <select
-          className="form-select"
-          value={selectedUserCharge}
-          onChange={(e) => setSelectedUserCharge(e.target.value)}
-          defaultValue=""
-        >
-          <option value="" disabled>
-            -- Select User --
-          </option>
-          {users.map((user) => (
-            <option key={user.username} value={user.username}>
-              {user.username}
-            </option>
-          ))}
-        </select>
+      <div className="card mb-4">
+        <div className="card-header">
+          <h3 className="mb-0">Set User Charge</h3>
+        </div>
+        <div className="card-body">
+          <div className="mb-3">
+            <label className="form-label">Select User:</label>
+            <select
+              className="form-select"
+              value={selectedUserCharge}
+              onChange={(e) => setSelectedUserCharge(e.target.value)}
+              defaultValue=""
+            >
+              <option value="" disabled>-- Select User --</option>
+              {users.map((user) => (
+                <option key={user.username} value={user.username}>
+                  {user.username}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Enter Charge Amount:</label>
+            <input
+              type="number"
+              className="form-control"
+              placeholder="Enter charge value"
+              value={chargeValue}
+              onChange={(e) => setChargeValue(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={handleSetCharge}>
+            Set Charge
+          </button>
+        </div>
       </div>
-      <div className="mb-3">
-        <label className="form-label">Enter Charge Amount:</label>
-        <input
-          type="number"
-          className="form-control"
-          placeholder="Enter charge value"
-          value={chargeValue}
-          onChange={(e) => setChargeValue(e.target.value)}
-        />
-      </div>
-      <button className="btn btn-primary" onClick={handleSetCharge}>
-        Set Charge
-      </button>
 
       {/* New Role Definition Section */}
-      <NewRoleForm />
+      <div className="card mb-4">
+        <div className="card-header">
+          <h3 className="mb-0">New Role Definition</h3>
+        </div>
+        <div className="card-body">
+          <NewRoleForm />
+        </div>
+      </div>
 
       {/* New User Creation Section */}
-      <NewUserForm />
+      <div className="card mb-4">
+        <div className="card-header">
+          <h3 className="mb-0">New User Creation</h3>
+        </div>
+        <div className="card-body">
+          <NewUserForm />
+        </div>
+      </div>
 
       {/* Dynamic Route Creation Section */}
-      <DynamicRouteForm />
+      <div className="card mb-4">
+        <div className="card-header">
+          <h3 className="mb-0">Dynamic Route Creation</h3>
+        </div>
+        <div className="card-body">
+          <DynamicRouteForm />
+        </div>
+      </div>
     </div>
   );
 };
