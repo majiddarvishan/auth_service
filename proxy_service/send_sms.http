@@ -2,7 +2,7 @@
 
 ###
 POST https://localhost:8443/v1/api/sms/send
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDY1OTg5MDcsInJvbGUiOiJhZG1pbiIsInVzZXIiOiJhZG1pbiJ9.Ay9rPkx5ka6aBFKGGZef7B83fyCEfWx48caWOO-4FAQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDcwNDk1MzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOiJhZG1pbiJ9.oQiP7pbfi5i6b3lhsEBsh9t9Krx13texQW2Z9F2IyQg
 Content-Type: application/json
 
 {

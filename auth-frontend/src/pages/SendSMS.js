@@ -26,7 +26,7 @@ const SendSMS = () => {
     };
 
     try {
-      await api.post("/sms/sendsms", payload, {
+      await api.post("/sms/send", payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       alert("SMS sent!");

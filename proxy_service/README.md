@@ -31,8 +31,9 @@ Use mkcert (better!)
 ```bash
 # Install mkcert (Linux example)
 sudo apt install libnss3-tools
+sudo apt install mkcert
 mkcert -install
-mkcert localhost
+mkcert localhost 127.0.0.1 ::1
 ```
 
 
