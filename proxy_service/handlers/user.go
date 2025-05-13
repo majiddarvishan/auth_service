@@ -139,11 +139,11 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// Fetch user and its Role in one go:
-    user, err := database.DB.GetUserAndRoleByUsername(req.Username)
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-        return
-    }
+	user, err := database.DB.GetUserAndRoleByUsername(req.Username)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
 
 	// Compare the stored hashed password with the incoming password.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
@@ -189,11 +189,11 @@ func DeleteUserHandler(c *gin.Context) {
 		return
 	}
 
-    err := database.DB.DeleteUserByUsername(username)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
+	err := database.DB.DeleteUserByUsername(username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
 		return
-    }
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
@@ -238,11 +238,74 @@ func UpdateUserRoleHandler(c *gin.Context) {
 		return
 	}
 
-    err := database.DB.UpdateUserRoleByUsername(username, req.Role)
-    if err != nil {
+	err := database.DB.UpdateUserRoleByUsername(username, req.Role)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role", "details": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
+}
+
+// @Summary      Get user phone numbers
+// @Description  Retrieves all phone numbers associated with the authenticated user.
+// @Tags         user
+// @Security     ApiKeyAuth
+// @Produce      json
+// @Success      200  {object}  map[string][]string  "{"phones": ["+1234567890", "+10987654321"]}"
+// @Failure      401  {object}  gin.H                "{"error": "user not authenticated"}"
+// @Failure      500  {object}  gin.H                "{"error": "could not fetch phones"}"
+// @Router       /user/{username}/phones [get]
+func GetUserPhonesHandler(c *gin.Context) {
+	userName := c.Param("username")
+	if userName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
+		return
+	}
+
+	nums, err := database.DB.GetUserPhones(userName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"phones": nums})
+}
+
+// @Summary      Add multiple phone numbers for the user
+// @Description  Adds one or more new phone numbers associated with the authenticated user.
+// @Tags         user
+// @Security     ApiKeyAuth
+// @Accept       json
+// @Produce      json
+// @Param        payload  body      struct{Numbers []string ` + "`json:\"numbers\" binding:\"required,min=1,dive,required\"`" + `}  true  "List of phone numbers"
+// @Success      201      {object}  gin.H "{\"message\": \"N phones added\"}"
+// @Failure      400      {object}  gin.H "{\"error\": \"invalid payload\"}"
+// @Failure      401      {object}  gin.H "{\"error\": \"user not authenticated\"}"
+// @Failure      500      {object}  gin.
+// @Router       /user/{username}/phones [post]
+func AddUserPhonesHandler(c *gin.Context) {
+   type addPhoneRequest struct {
+        Numbers []string `json:"numbers" binding:"required,min=1,dive,required"`
+    }
+
+    userName := c.Param("username")
+	if userName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
+		return
+	}
+
+    // Bind and validate input
+    var req addPhoneRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+      c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+      return
+    }
+
+    if err := database.DB.AddPhoneForUser(userName, req.Numbers); err != nil {
+      c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+      return
+    }
+
+    c.JSON(http.StatusCreated, gin.H{"message": "phone added"})
 }

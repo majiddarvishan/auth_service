@@ -1,0 +1,10 @@
+{
+  "dev": {
+    "host": "https://localhost:8443/v1/api",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+  },
+  "prod": {
+    "host": "https://api.myapp.com",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…"
+  }
+}

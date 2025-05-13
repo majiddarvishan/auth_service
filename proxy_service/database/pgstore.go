@@ -32,7 +32,7 @@ func (s *PGStore) Init() error {
 	}
 
 	// Auto-migrate models.
-	if err := s.db.AutoMigrate(&User{}, &Role{}, &AccountingRule{}, &CustomEndpoint{}); err != nil {
+	if err := s.db.AutoMigrate(&User{}, &Role{}, &AccountingRule{}, &CustomEndpoint{}, Phone{}); err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
 
@@ -72,7 +72,7 @@ func (s *PGStore) GetUserAndRoleByUsername(username string) (*User, error) {
 }
 
 func (s *PGStore) UpdateUserRoleByUsername(username, roleName string) error {
-    // Find user by username.
+	// Find user by username.
 	var user User
 	if err := s.db.Where("username = ?", username).First(&user).Error; err != nil {
 		return fmt.Errorf("User not found")
@@ -91,7 +91,7 @@ func (s *PGStore) UpdateUserRoleByUsername(username, roleName string) error {
 		return err
 	}
 
-    return nil
+	return nil
 }
 
 func (s *PGStore) GetAllUsers() ([]User, error) {
@@ -131,6 +131,49 @@ func (s *PGStore) DeleteUserByUsername(username string) error {
 	//     c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
 	//     return
 	// }
+
+	return nil
+}
+
+func (s *PGStore) GetUserPhones(userName string) ([]string, error) {
+	// Find user by username.
+	var user User
+	if err := s.db.Where("username = ?", userName).First(&user).Error; err != nil {
+		return nil, fmt.Errorf("User not found")
+	}
+
+	var phones []Phone
+	if err := s.db.Where("user_id = ?", user.ID).Find(&phones).Error; err != nil {
+		return nil, fmt.Errorf("could not fetch phones")
+	}
+
+	// Extract just the numbers
+	nums := make([]string, len(phones))
+	for i, p := range phones {
+		nums[i] = p.Number
+	}
+
+	return nums, nil
+}
+
+func (s *PGStore) AddPhoneForUser(userName string, phones []string) error {
+	// Find user by username.
+	var user User
+	if err := s.db.Where("username = ?", userName).First(&user).Error; err != nil {
+		return fmt.Errorf("User not found")
+	}
+
+	// batch insert each phone
+	for _, num := range phones {
+		phone := Phone{
+			Number: num,
+			UserID: user.ID,
+		}
+		if err := s.db.Create(&phone).Error; err != nil {
+			return fmt.Errorf("could not save phones")
+
+		}
+	}
 
 	return nil
 }

@@ -109,6 +109,14 @@ func (m *MockStore) DeleteUserByUsername(username string) error {
 	return nil
 }
 
+func (s *MockStore) GetUserPhones(userName string) ([]string, error) {
+	return nil, nil
+}
+
+func (s *MockStore) AddPhoneForUser(username string, phones []string) error {
+	return nil
+}
+
 // Role
 func (m *MockStore) CreateRole(r *Role) error {
 	m.mu.Lock()

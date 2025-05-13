@@ -34,3 +34,9 @@ type CustomEndpoint struct {
 	NeedAccounting bool           `json:"needAccounting" gorm:"default:false"`                // Flag: true if route requires accounting check
 	Enabled        bool           `gorm:"default:true"`
 }
+
+type Phone struct {
+  gorm.Model
+  Number string `gorm:"not null"`
+  UserID uint   `gorm:"index;not null"`
+}

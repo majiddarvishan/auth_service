@@ -6,6 +6,8 @@ import Register from "./components/Auth/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import SendSMS from "./pages/SendSMS";
 import ProtectedRoute from "./components/ProtectedRoute";
+import UserPhones from "./pages/UserPhones";
+
 
 const App = () => {
   return (
@@ -36,6 +38,15 @@ const App = () => {
           element={
             <ProtectedRoute allowedRole="admin">
               <Register />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <UserPhones />
             </ProtectedRoute>
           }
         />

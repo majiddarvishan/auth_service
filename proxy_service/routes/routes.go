@@ -162,6 +162,19 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		handlers.UpdateUserRoleHandler,
 	)
 
+    // Get User Phones (Admin Only)
+	rootGroup.GET("/users/:username/phones",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.GetUserPhonesHandler,
+	)
+
+    rootGroup.POST("/users/:username/phones",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.AddUserPhonesHandler,
+	)
+
 	// Create New Role (Admin Only)
 	rootGroup.POST("/roles",
 		middleware.AuthMiddleware,
