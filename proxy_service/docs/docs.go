@@ -329,7 +329,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{username}": {
+        "/user/{username}": {
             "delete": {
                 "description": "Delete an existing user account (admin only)",
                 "produces": [
@@ -388,7 +388,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{username}/role": {
+        "/user/{username}/role": {
             "put": {
                 "description": "Update the role of an existing user (admin only)",
                 "consumes": [

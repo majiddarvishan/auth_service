@@ -4,6 +4,7 @@ import (
 	"auth_service/config"
 	"auth_service/database"
 	"auth_service/routes"
+    "auth_service/pkg/trie"
 	"fmt"
 )
 
@@ -34,6 +35,7 @@ func main() {
         return
     }
 
+    trie.TrieManagerInstance = trie.NewTrieManager()
 
 	// Setup routes.
 	routes.SetupRoutes(":8080", ":8443")

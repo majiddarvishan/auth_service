@@ -6,6 +6,7 @@ import (
 
 	"auth_service/config"
 	"auth_service/database"
+	// "auth_service/pkg/trie"
 
 	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
@@ -154,7 +155,7 @@ func LoginHandler(c *gin.Context) {
 	// Create JWT claims: subject, role, and expiry.
 	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
 	claims := jwt.MapClaims{
-		"user": user.Username,
+		"user": user.ID,
 		"role": user.Role.Name,
 		"exp":  expirationTime.Unix(),
 	}
@@ -180,7 +181,7 @@ func LoginHandler(c *gin.Context) {
 // @Failure      400       {object}  map[string]string  "Username is required"
 // @Failure      404       {object}  map[string]string  "User not found"
 // @Failure      500       {object}  map[string]string  "Could not delete user"
-// @Router       /users/{username} [delete]
+// @Router       /user/{username} [delete]
 func DeleteUserHandler(c *gin.Context) {
 	// Get the username from the URL parameter.
 	username := c.Param("username")
@@ -218,7 +219,7 @@ type RoleUpdateRequest struct {
 // @Failure      400       {object}  map[string]string  "Invalid input or missing fields"
 // @Failure      404       {object}  map[string]string  "User not found"
 // @Failure      500       {object}  map[string]string  "Failed to update user role"
-// @Router       /users/{username}/role [put]
+// @Router       /user/{username}/role [put]
 func UpdateUserRoleHandler(c *gin.Context) {
 	// Get the username from the URL parameter.
 	username := c.Param("username")
@@ -256,21 +257,21 @@ func UpdateUserRoleHandler(c *gin.Context) {
 // @Failure      401  {object}  gin.H                "{"error": "user not authenticated"}"
 // @Failure      500  {object}  gin.H                "{"error": "could not fetch phones"}"
 // @Router       /user/{username}/phones [get]
-func GetUserPhonesHandler(c *gin.Context) {
-	userName := c.Param("username")
-	if userName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
-		return
-	}
+// func GetUserPhonesHandler(c *gin.Context) {
+// 	userName := c.Param("username")
+// 	if userName == "" {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
+// 		return
+// 	}
 
-	nums, err := database.DB.GetUserPhones(userName)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+// 	nums, err := database.DB.GetUserPhones(userName)
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-	c.JSON(http.StatusOK, gin.H{"phones": nums})
-}
+// 	c.JSON(http.StatusOK, gin.H{"phones": nums})
+// }
 
 // @Summary      Add multiple phone numbers for the user
 // @Description  Adds one or more new phone numbers associated with the authenticated user.
@@ -284,28 +285,32 @@ func GetUserPhonesHandler(c *gin.Context) {
 // @Failure      401      {object}  gin.H "{\"error\": \"user not authenticated\"}"
 // @Failure      500      {object}  gin.
 // @Router       /user/{username}/phones [post]
-func AddUserPhonesHandler(c *gin.Context) {
-   type addPhoneRequest struct {
-        Numbers []string `json:"numbers" binding:"required,min=1,dive,required"`
-    }
+// func AddUserPhonesHandler(c *gin.Context) {
+// 	type addPhoneRequest struct {
+// 		Numbers []string `json:"numbers" binding:"required,min=1,dive,required"`
+// 	}
 
-    userName := c.Param("username")
-	if userName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
-		return
-	}
+// 	userName := c.Param("username")
+// 	if userName == "" {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
+// 		return
+// 	}
 
-    // Bind and validate input
-    var req addPhoneRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-      c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
-      return
-    }
+// 	// Bind and validate input
+// 	var req addPhoneRequest
+// 	if err := c.ShouldBindJSON(&req); err != nil {
+// 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+// 		return
+// 	}
 
-    if err := database.DB.AddPhoneForUser(userName, req.Numbers); err != nil {
-      c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-      return
-    }
+// 	if err := database.DB.AddPhoneForUser(userName, req.Numbers); err != nil {
+// 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-    c.JSON(http.StatusCreated, gin.H{"message": "phone added"})
-}
+// 	for _, num := range req.Numbers {
+// 		trie.TrieManagerInstance.Add(userName, num)
+// 	}
+
+// 	c.JSON(http.StatusCreated, gin.H{"message": "phone added"})
+// }

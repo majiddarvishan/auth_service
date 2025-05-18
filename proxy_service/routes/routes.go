@@ -149,31 +149,31 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	)
 
 	// DELETE User Endpoint (Admin Only)
-	rootGroup.DELETE("/users/:username",
+	rootGroup.DELETE("/user/:username",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.DeleteUserHandler,
 	)
 
 	// Update User Role (Admin Only)
-	rootGroup.PUT("/users/:username/role",
+	rootGroup.PUT("/user/:username/role",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.UpdateUserRoleHandler,
 	)
 
     // Get User Phones (Admin Only)
-	rootGroup.GET("/users/:username/phones",
-		middleware.AuthMiddleware,
-		middleware.RoleMiddleware("admin"),
-		handlers.GetUserPhonesHandler,
-	)
+	// rootGroup.GET("/user/:username/phones",
+	// 	middleware.AuthMiddleware,
+	// 	middleware.RoleMiddleware("admin"),
+	// 	handlers.GetUserPhonesHandler,
+	// )
 
-    rootGroup.POST("/users/:username/phones",
-		middleware.AuthMiddleware,
-		middleware.RoleMiddleware("admin"),
-		handlers.AddUserPhonesHandler,
-	)
+    // rootGroup.POST("/user/:username/phones",
+	// 	middleware.AuthMiddleware,
+	// 	middleware.RoleMiddleware("admin"),
+	// 	handlers.AddUserPhonesHandler,
+	// )
 
 	// Create New Role (Admin Only)
 	rootGroup.POST("/roles",

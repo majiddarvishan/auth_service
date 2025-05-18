@@ -5,12 +5,12 @@
 
 
 ### Get current phones (should be empty initially)
-GET https://localhost:8443/v1/api/users/test/phones HTTP/1.1
+GET https://localhost:8443/v1/api/user/test/phones HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDcyMTA5MzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOiJhZG1pbiJ9.sKaKJYPbI8Uwa5bC4gUcW0roD9JbIKXCZYS81_B1x3Q
 Accept: application/json
 
 ### Add multiple phone numbers
-POST https://localhost:8443/v1/api/users/test/phones HTTP/1.1
+POST https://localhost:8443/v1/api/user/test/phones HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDcyMTA5MzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOiJhZG1pbiJ9.sKaKJYPbI8Uwa5bC4gUcW0roD9JbIKXCZYS81_B1x3Q
 Content-Type: application/json
 
@@ -22,7 +22,7 @@ Content-Type: application/json
 }
 
 ### Test invalid payload (missing numbers field)
-POST https://localhost:8443/v1/api/users/test/phones HTTP/1.1
+POST https://localhost:8443/v1/api/user/test/phones HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDcyMTA5MzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOiJhZG1pbiJ9.sKaKJYPbI8Uwa5bC4gUcW0roD9JbIKXCZYS81_B1x3Q
 Content-Type: application/json
 

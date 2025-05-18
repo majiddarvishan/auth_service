@@ -63,7 +63,7 @@ const AdminDashboard = () => {
     }
     try {
       await api.put(
-        `/users/${selectedUserRole}/role`,
+        `/user/${selectedUserRole}/role`,
         { role: newRole },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -88,7 +88,7 @@ const AdminDashboard = () => {
     }
     try {
       await api.put(
-        `/accounting/users/${selectedUserCharge}/charge`,
+        `/accounting/user/${selectedUserCharge}/charge`,
         { charge: parseFloat(chargeValue) },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -253,7 +253,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-       
+
         {/* New User Creation Tab */}
         <div className="tab-pane fade" id="new-user" role="tabpanel" aria-labelledby="new-user-tab">
           <div className="card">

@@ -10,7 +10,7 @@ func SetupRoutes() *gin.Engine {
 	r := gin.Default()
 
 	r.POST("/accounting/charge", handlers.ChargeHandler)
-	r.PUT("/accounting/users/:username/charge", handlers.UpdateUserChargeHandler)
+	r.PUT("/accounting/user/:username/charge", handlers.UpdateUserChargeHandler)
 
 	return r
 }

@@ -335,7 +335,7 @@ paths:
       summary: Register a new user
       tags:
       - Auth
-  /users/{username}:
+  /user/{username}:
     delete:
       description: Delete an existing user account (admin only)
       parameters:
@@ -374,7 +374,7 @@ paths:
       summary: Delete a user
       tags:
       - Auth
-  /users/{username}/role:
+  /user/{username}/role:
     put:
       consumes:
       - application/json
