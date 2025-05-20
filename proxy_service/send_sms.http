@@ -33,3 +33,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDcwNDk1M
 ###
 GET https://localhost:8443/v1/api/sms/track?req_id=4
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDcwNDk1MzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOiJhZG1pbiJ9.oQiP7pbfi5i6b3lhsEBsh9t9Krx13texQW2Z9F2IyQg
+
+###
+GET https://localhost:8443/v1/api/sms/deliversm
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc4MTcxNzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjJ9.XG_SftWXN1amSR2LSxF0qijey3X4vYuEHWJi2aGeliY
