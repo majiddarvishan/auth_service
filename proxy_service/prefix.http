@@ -1,0 +1,32 @@
+@no-ssl-verify
+
+###
+POST https://localhost:8443/v1/api/prefix
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc4MTcxNzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjJ9.XG_SftWXN1amSR2LSxF0qijey3X4vYuEHWJi2aGeliY
+Content-Type: application/json
+
+{
+    "user": "ali",
+    "numbers": [
+        {
+            "number": "989122112",
+            "is_prefix": true
+        }
+    ]
+}
+
+###
+DELETE https://localhost:8443/v1/api/prefix
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc4MTcxNzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjJ9.XG_SftWXN1amSR2LSxF0qijey3X4vYuEHWJi2aGeliY
+Content-Type: application/json
+
+{
+  "user": "ali",
+  "numbers": [
+         "989122112"
+    ]
+}
+
+###
+GET https://localhost:8443/v1/api/prefix
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc4MTcxNzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjJ9.XG_SftWXN1amSR2LSxF0qijey3X4vYuEHWJi2aGeliY

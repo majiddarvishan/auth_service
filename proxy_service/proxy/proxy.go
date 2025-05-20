@@ -27,12 +27,23 @@ func NewMultiTargetReverseProxy(targets []*url.URL) *httputil.ReverseProxy {
 		// Update the scheme and host of the request to match the selected target.
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
+		req.Host = target.Host
 
 		newPath := ""
 		if strings.HasPrefix(req.URL.Path, config.BaseApi) {
 			newPath = strings.TrimPrefix(req.URL.Path, config.BaseApi)
 		}
+
 		req.URL.Path = target.Path + newPath
+
+		// Remove trailing slash if present
+		req.URL.Path = strings.TrimSuffix(req.URL.Path, "/")
+
+		// Strip hop-by-hop and forwarding headers
+		req.Header.Del("X-Forwarded-For")
+		req.Header.Del("X-Real-IP")
+		req.Header.Del("Forwarded") // RFC-7239
+		req.Header.Del("Via")
 	}
 
 	return &httputil.ReverseProxy{Director: director}

@@ -42,6 +42,9 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	httpsRouter := gin.Default()
 	// httpRouter := gin.Default()
 
+    // httpsRouter.RedirectTrailingSlash = false
+    // httpsRouter.RemoveExtraSlash = true
+
 	// Enable CORS for frontend requests.
 	corsConfig := cors.Config{
 		AllowOrigins:     []string{"*"},
