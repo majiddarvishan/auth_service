@@ -26,13 +26,12 @@ func main() {
 	config.LoadConfig()
 
 	// Initialize the database.
-	// database.InitDB()
-    // _, err := database.NewStore("mock")
-    _, err := database.NewStore("postgres")
-    if(err != nil){
-        fmt.Println("Error in creating databse connection")
-        return
-    }
+	// _, err := database.NewStore("mock")
+	_, err := database.NewStore("postgres")
+	if err != nil {
+		fmt.Println("Error in creating databse connection")
+		return
+	}
 
 	// Setup routes.
 	routes.SetupRoutes(":8080", ":8443")

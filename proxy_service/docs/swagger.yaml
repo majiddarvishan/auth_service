@@ -299,42 +299,6 @@ paths:
       summary: Create a new role
       tags:
       - roles
-  /users:
-    post:
-      consumes:
-      - application/json
-      description: Create a new user account with username, password, and role
-      parameters:
-      - description: Registration payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.RegisterRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User registered successfully
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Invalid input or missing fields
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Server error during registration
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Register a new user
-      tags:
-      - Auth
   /user/{username}:
     delete:
       description: Delete an existing user account (admin only)
@@ -419,6 +383,42 @@ paths:
               type: string
             type: object
       summary: Update user role
+      tags:
+      - Auth
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with username, password, and role
+      parameters:
+      - description: Registration payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User registered successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input or missing fields
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error during registration
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
       tags:
       - Auth
 swagger: "2.0"

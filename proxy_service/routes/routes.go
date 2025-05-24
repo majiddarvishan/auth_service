@@ -107,9 +107,9 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// })
 
 	// redirect /swagger to /swagger/index.html
-	rootGroup.GET("/swagger", func(c *gin.Context) {
-        c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
-	})
+	// rootGroup.GET("/swagger", func(c *gin.Context) {
+    //     c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	// })
 	// also catch the slash variant if you like
 	// httpsRouter.GET("/swagger/", func(c *gin.Context) {
     //     c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
@@ -120,6 +120,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
     // })
 
     rootGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+    rootGroup.GET("/doc", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	rootGroup.POST("/login", handlers.LoginHandler)
 
