@@ -120,7 +120,12 @@ func SetupRoutes(httpAddr, httpsAddr string) {
     // })
 
     rootGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-    rootGroup.GET("/doc", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+    // redirect /swagger to /swagger/index.html
+	// rootGroup.GET("/swagger", func(c *gin.Context) {
+    //     c.Redirect(http.StatusMovedPermanently, "/api/v1/swagger/index.html")
+	// })
+
 
 	rootGroup.POST("/login", handlers.LoginHandler)
 
