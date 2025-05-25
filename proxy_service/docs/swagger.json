@@ -134,6 +134,61 @@
                 }
             }
         },
+        "/captcha/image/{captchaId}": {
+            "get": {
+                "description": "Returns a CAPTCHA image in PNG format for the given CAPTCHA ID. ![Example CAPTCHA](https://example.com/sample.png)\nExample: GET /captcha/image/a1b2c3",
+                "produces": [
+                    "image/png"
+                ],
+                "tags": [
+                    "captcha"
+                ],
+                "summary": "Serve CAPTCHA image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CAPTCHA ID",
+                        "name": "captchaId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/captcha/new": {
+            "get": {
+                "description": "Returns a new CAPTCHA ID to be used for verification",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "captcha"
+                ],
+                "summary": "Generate a new CAPTCHA ID",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CaptchaResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "Authenticate user credentials and return a signed JWT",
@@ -536,6 +591,15 @@
                     "items": {
                         "$ref": "#/definitions/handlers.SwaggerUserRolePair"
                     }
+                }
+            }
+        },
+        "handlers.CaptchaResponse": {
+            "type": "object",
+            "properties": {
+                "captchaId": {
+                    "type": "string",
+                    "example": "a1b2c3"
                 }
             }
         },

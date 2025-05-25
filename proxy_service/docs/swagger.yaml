@@ -13,6 +13,12 @@ definitions:
           $ref: '#/definitions/handlers.SwaggerUserRolePair'
         type: array
     type: object
+  handlers.CaptchaResponse:
+    properties:
+      captchaId:
+        example: a1b2c3
+        type: string
+    type: object
   handlers.ErrorResponse:
     properties:
       details:
@@ -219,6 +225,44 @@ paths:
       summary: Get admin dashboard data
       tags:
       - Admin
+  /captcha/image/{captchaId}:
+    get:
+      description: |-
+        Returns a CAPTCHA image in PNG format for the given CAPTCHA ID. ![Example CAPTCHA](https://example.com/sample.png)
+        Example: GET /captcha/image/a1b2c3
+      parameters:
+      - description: CAPTCHA ID
+        in: path
+        name: captchaId
+        required: true
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Serve CAPTCHA image
+      tags:
+      - captcha
+  /captcha/new:
+    get:
+      description: Returns a new CAPTCHA ID to be used for verification
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.CaptchaResponse'
+      summary: Generate a new CAPTCHA ID
+      tags:
+      - captcha
   /login:
     post:
       consumes:
