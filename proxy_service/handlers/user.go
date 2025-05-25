@@ -6,7 +6,6 @@ import (
 
 	"auth_service/config"
 	"auth_service/database"
-	// "auth_service/pkg/trie"
 
 	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
@@ -106,8 +105,6 @@ func RegisterHandler(c *gin.Context) {
 type LoginRequest struct {
 	Username        string `json:"username"`
 	Password        string `json:"password"`
-	CaptchaId       string `json:"captchaId"`
-	CaptchaSolution string `json:"captchaSolution"`
 }
 
 // LoginHandler authenticates the user and returns a JWT token.
@@ -124,6 +121,70 @@ type LoginRequest struct {
 // @Router       /login [post]
 func LoginHandler(c *gin.Context) {
 	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
+		return
+	}
+
+	// Fetch user and its Role in one go:
+	user, err := database.DB.GetUserAndRoleByUsername(req.Username)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Compare the stored hashed password with the incoming password.
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+		return
+	}
+
+	// Create JWT claims: subject, role, and expiry.
+	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
+	claims := jwt.MapClaims{
+		"user": user.ID,
+		"role": user.Role.Name,
+		"exp":  expirationTime.Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, err := token.SignedString([]byte(config.SecretKey))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": tokenStr})
+}
+
+// SecureL represents the payload for user login.
+// swagger:model SecureL
+// @Description SecureL defines the expected request body for logging in.
+// @Property username body string true "Username of the account"
+// @Property password body string true "Password of the account"
+// @Property captchaId body string true  "ID of the captcha challenge"
+// @Property captchaSolution body string true  "Solution to the captcha"
+type SecureLoginRequest struct {
+	Username        string `json:"username"`
+	Password        string `json:"password"`
+	CaptchaId       string `json:"captchaId"`
+	CaptchaSolution string `json:"captchaSolution"`
+}
+
+// LoginHandler authenticates the user and returns a JWT token.
+// @Summary      Login a user
+// @Description  Authenticate user credentials and return a signed JWT
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      SecureLoginRequest  true  "Login payload"
+// @Success      200      {object}  map[string]string  "JWT token"
+// @Failure      400      {object}  map[string]string  "Invalid JSON format"
+// @Failure      401      {object}  map[string]string  "Unauthorized: invalid credentials"
+// @Failure      500      {object}  map[string]string  "Server error during token generation"
+// @Router       /secure-login [post]
+func SecureLoginHandler(c *gin.Context) {
+	var req SecureLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
 		return
@@ -247,70 +308,3 @@ func UpdateUserRoleHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
 }
-
-// @Summary      Get user phone numbers
-// @Description  Retrieves all phone numbers associated with the authenticated user.
-// @Tags         user
-// @Security     ApiKeyAuth
-// @Produce      json
-// @Success      200  {object}  map[string][]string  "{"phones": ["+1234567890", "+10987654321"]}"
-// @Failure      401  {object}  gin.H                "{"error": "user not authenticated"}"
-// @Failure      500  {object}  gin.H                "{"error": "could not fetch phones"}"
-// @Router       /user/{username}/phones [get]
-// func GetUserPhonesHandler(c *gin.Context) {
-// 	userName := c.Param("username")
-// 	if userName == "" {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
-// 		return
-// 	}
-
-// 	nums, err := database.DB.GetUserPhones(userName)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
-
-// 	c.JSON(http.StatusOK, gin.H{"phones": nums})
-// }
-
-// @Summary      Add multiple phone numbers for the user
-// @Description  Adds one or more new phone numbers associated with the authenticated user.
-// @Tags         user
-// @Security     ApiKeyAuth
-// @Accept       json
-// @Produce      json
-// @Param        payload  body      struct{Numbers []string ` + "`json:\"numbers\" binding:\"required,min=1,dive,required\"`" + `}  true  "List of phone numbers"
-// @Success      201      {object}  gin.H "{\"message\": \"N phones added\"}"
-// @Failure      400      {object}  gin.H "{\"error\": \"invalid payload\"}"
-// @Failure      401      {object}  gin.H "{\"error\": \"user not authenticated\"}"
-// @Failure      500      {object}  gin.
-// @Router       /user/{username}/phones [post]
-// func AddUserPhonesHandler(c *gin.Context) {
-// 	type addPhoneRequest struct {
-// 		Numbers []string `json:"numbers" binding:"required,min=1,dive,required"`
-// 	}
-
-// 	userName := c.Param("username")
-// 	if userName == "" {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
-// 		return
-// 	}
-
-// 	// Bind and validate input
-// 	var req addPhoneRequest
-// 	if err := c.ShouldBindJSON(&req); err != nil {
-// 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
-// 		return
-// 	}
-
-// 	if err := database.DB.AddPhoneForUser(userName, req.Numbers); err != nil {
-// 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
-
-// 	for _, num := range req.Numbers {
-// 		trie.TrieManagerInstance.Add(userName, num)
-// 	}
-
-// 	c.JSON(http.StatusCreated, gin.H{"message": "phone added"})
-// }

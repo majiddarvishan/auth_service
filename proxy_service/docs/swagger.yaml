@@ -23,10 +23,6 @@ definitions:
   handlers.LoginRequest:
     description: LoginRequest defines the expected request body for logging in.
     properties:
-      captchaId:
-        type: string
-      captchaSolution:
-        type: string
       password:
         type: string
       username:
@@ -55,6 +51,18 @@ definitions:
         items:
           $ref: '#/definitions/handlers.SwaggerRole'
         type: array
+    type: object
+  handlers.SecureLoginRequest:
+    description: SecureL defines the expected request body for logging in.
+    properties:
+      captchaId:
+        type: string
+      captchaSolution:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
     type: object
   handlers.SuccessResponse:
     properties:
@@ -135,7 +143,7 @@ info:
   title: Auth service API
   version: "1.0"
 paths:
-  /admin/customendpoints:
+  /admin/custom-endpoints:
     post:
       consumes:
       - application/json
@@ -299,6 +307,48 @@ paths:
       summary: Create a new role
       tags:
       - roles
+  /secure-login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user credentials and return a signed JWT
+      parameters:
+      - description: Login payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SecureLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid JSON format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'Unauthorized: invalid credentials'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Server error during token generation
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login a user
+      tags:
+      - Auth
   /user/{username}:
     delete:
       description: Delete an existing user account (admin only)

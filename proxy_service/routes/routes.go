@@ -106,19 +106,6 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	//     }
 	// })
 
-	// redirect /swagger to /swagger/index.html
-	// rootGroup.GET("/swagger", func(c *gin.Context) {
-    //     c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
-	// })
-	// also catch the slash variant if you like
-	// httpsRouter.GET("/swagger/", func(c *gin.Context) {
-    //     c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
-	// })
-
-    // httpsRouter.GET("/swagger", func(c *gin.Context) {
-    //     c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
-    // })
-
     rootGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
     // redirect /swagger to /swagger/index.html
@@ -128,6 +115,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 
 
 	rootGroup.POST("/login", handlers.LoginHandler)
+    rootGroup.POST("/secure-login", handlers.SecureLoginHandler)
 
 	rootGroup.GET("/admin",
 		middleware.AuthMiddleware,          // Ensure user is authenticated.
@@ -135,13 +123,13 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		handlers.AdminDashboardHandler,
 	)
 
-	rootGroup.POST("/admin/customendpoints",
+	rootGroup.POST("/admin/custom-endpoints",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.CreateCustomEndpointHandler(dynamicGroup),
 	)
 
-	// httpsRouter.DELETE("/admin/customendpoints/:endpoint",
+	// httpsRouter.DELETE("/admin/custom-endpoints/:endpoint",
 	// 	middleware.AuthMiddleware,
 	// 	middleware.RoleMiddleware("admin"),
 	// 	handlers.CreateCustomEndpointHandler(dynamicGroup),
@@ -170,19 +158,6 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		middleware.RoleMiddleware("admin"),
 		handlers.UpdateUserRoleHandler,
 	)
-
-    // Get User Phones (Admin Only)
-	// rootGroup.GET("/user/:username/phones",
-	// 	middleware.AuthMiddleware,
-	// 	middleware.RoleMiddleware("admin"),
-	// 	handlers.GetUserPhonesHandler,
-	// )
-
-    // rootGroup.POST("/user/:username/phones",
-	// 	middleware.AuthMiddleware,
-	// 	middleware.RoleMiddleware("admin"),
-	// 	handlers.AddUserPhonesHandler,
-	// )
 
 	// Create New Role (Admin Only)
 	rootGroup.POST("/roles",

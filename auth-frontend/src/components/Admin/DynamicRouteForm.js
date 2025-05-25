@@ -34,7 +34,7 @@ const DynamicRouteForm = () => {
     e.preventDefault();
     try {
       await api.post(
-        "/admin/customendpoints",
+        "/admin/custom-endpoints",
         dynamicRoute,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

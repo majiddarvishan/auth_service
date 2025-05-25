@@ -24,7 +24,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/customendpoints": {
+        "/admin/custom-endpoints": {
             "post": {
                 "description": "Create Custom Endpoint to redirect its requests to another endpoints",
                 "consumes": [
@@ -274,6 +274,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/secure-login": {
+            "post": {
+                "description": "Authenticate user credentials and return a signed JWT",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login a user",
+                "parameters": [
+                    {
+                        "description": "Login payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SecureLoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWT token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid JSON format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: invalid credentials",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error during token generation",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user/{username}": {
             "delete": {
                 "description": "Delete an existing user account (admin only)",
@@ -496,12 +560,6 @@ const docTemplate = `{
             "description": "LoginRequest defines the expected request body for logging in.",
             "type": "object",
             "properties": {
-                "captchaId": {
-                    "type": "string"
-                },
-                "captchaSolution": {
-                    "type": "string"
-                },
                 "password": {
                     "type": "string"
                 },
@@ -542,6 +600,24 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/handlers.SwaggerRole"
                     }
+                }
+            }
+        },
+        "handlers.SecureLoginRequest": {
+            "description": "SecureL defines the expected request body for logging in.",
+            "type": "object",
+            "properties": {
+                "captchaId": {
+                    "type": "string"
+                },
+                "captchaSolution": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },

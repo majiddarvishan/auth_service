@@ -67,7 +67,7 @@ const Login = () => {
       };
 
       // Use the custom axios instance with SSL validation disabled
-      const response = await api.post("/login", payload, {
+      const response = await api.post("/secure-login", payload, {
         // This tells axios to accept the response regardless of status code
         validateStatus: () => true
       });

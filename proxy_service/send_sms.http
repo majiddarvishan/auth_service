@@ -14,7 +14,7 @@ Content-Type: application/json
 
 ###
 POST https://localhost:8443/v1/api/sms/send
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDY1OTg5MDcsInJvbGUiOiJhZG1pbiIsInVzZXIiOiJhZG1pbiJ9.Ay9rPkx5ka6aBFKGGZef7B83fyCEfWx48caWOO-4FAQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgyNDY2NjQsInJvbGUiOiJhZG1pbiIsInVzZXIiOjJ9.Z9eWM-UHFLrPz9bTnP45N7rvnJEMtV7jBF8SI-CbVpU
 Content-Type: application/json
 
 {
