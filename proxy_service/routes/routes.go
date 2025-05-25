@@ -4,14 +4,10 @@ import (
 	"auth_service/config"
 	"auth_service/handlers"
 	"auth_service/middleware"
-	"log"
 
-	// "fmt"
-	// "net"
-	// "strings"
+	"log"
 	"net/http"
 
-	"github.com/dchest/captcha"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
@@ -42,8 +38,8 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	httpsRouter := gin.Default()
 	// httpRouter := gin.Default()
 
-    // httpsRouter.RedirectTrailingSlash = false
-    // httpsRouter.RemoveExtraSlash = true
+	// httpsRouter.RedirectTrailingSlash = false
+	// httpsRouter.RemoveExtraSlash = true
 
 	// Enable CORS for frontend requests.
 	corsConfig := cors.Config{
@@ -72,24 +68,13 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	})
 
 	// Add captcha endpoints to HTTP router with custom CORS handlers
-	captchaGroup.GET("/new", func(c *gin.Context) {
-		captchaId := captcha.NewLen(6)
-		c.JSON(http.StatusOK, gin.H{"captchaId": captchaId})
-	})
+	captchaGroup.GET("/new", handlers.Newcaptcha)
+	captchaGroup.GET("/image/:captchaId", handlers.NewcaptchaImage)
 
-	captchaGroup.GET("/image/:captchaId", func(c *gin.Context) {
-		captchaId := c.Param("captchaId")
-		c.Header("Content-Type", "image/png")
-		if err := captcha.WriteImage(c.Writer, captchaId, 240, 80); err != nil {
-			c.AbortWithStatus(http.StatusInternalServerError)
-		}
-	})
+	rootGroup := httpsRouter.Group(config.BaseApi)
 
-    rootGroup := httpsRouter.Group(config.BaseApi)
-
-    // Create a dedicated group for dynamic endpoints.
+	// Create a dedicated group for dynamic endpoints.
 	var dynamicGroup *gin.RouterGroup = httpsRouter.Group(config.BaseApi)
-
 
 	// Only redirect non-captcha routes to HTTPS
 	// httpRouter.NoRoute(func(c *gin.Context) {
@@ -106,16 +91,15 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	//     }
 	// })
 
-    rootGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	rootGroup.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-    // redirect /swagger to /swagger/index.html
+	// redirect /swagger to /swagger/index.html
 	// rootGroup.GET("/swagger", func(c *gin.Context) {
-    //     c.Redirect(http.StatusMovedPermanently, "/api/v1/swagger/index.html")
+	//     c.Redirect(http.StatusMovedPermanently, "/api/v1/swagger/index.html")
 	// })
 
-
 	rootGroup.POST("/login", handlers.LoginHandler)
-    rootGroup.POST("/secure-login", handlers.SecureLoginHandler)
+	rootGroup.POST("/secure-login", handlers.SecureLoginHandler)
 
 	rootGroup.GET("/admin",
 		middleware.AuthMiddleware,          // Ensure user is authenticated.
@@ -180,7 +164,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// }()
 	// if err := httpsRouter.RunTLS(httpsAddr, "cert.pem", "key.pem"); err != nil {
 	// if err := httpsRouter.RunTLS(httpsAddr, "localhost.pem", "localhost-key.pem"); err != nil {
-	if err := httpsRouter.RunTLS(httpsAddr, config.TLSPath + "/localhost.pem", config.TLSPath + "/localhost-key.pem"); err != nil {
+	if err := httpsRouter.RunTLS(httpsAddr, config.TLSPath+"/localhost.pem", config.TLSPath+"/localhost-key.pem"); err != nil {
 		log.Fatal("Failed to start HTTPS server:", err)
 	}
 }
