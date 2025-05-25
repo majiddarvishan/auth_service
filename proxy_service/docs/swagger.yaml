@@ -228,7 +228,7 @@ paths:
   /captcha/image/{captchaId}:
     get:
       description: |-
-        Returns a CAPTCHA image in PNG format for the given CAPTCHA ID. ![Example CAPTCHA](https://example.com/sample.png)
+        Returns a CAPTCHA image in PNG format for the given CAPTCHA ID.
         Example: GET /captcha/image/a1b2c3
       parameters:
       - description: CAPTCHA ID

@@ -142,7 +142,7 @@ const docTemplate = `{
         },
         "/captcha/image/{captchaId}": {
             "get": {
-                "description": "Returns a CAPTCHA image in PNG format for the given CAPTCHA ID. ![Example CAPTCHA](https://example.com/sample.png)\nExample: GET /captcha/image/a1b2c3",
+                "description": "Returns a CAPTCHA image in PNG format for the given CAPTCHA ID.\nExample: GET /captcha/image/a1b2c3",
                 "produces": [
                     "image/png"
                 ],
