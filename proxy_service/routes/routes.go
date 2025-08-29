@@ -130,14 +130,14 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	)
 
 	// DELETE User Endpoint (Admin Only)
-	rootGroup.DELETE("/user/:username",
+	rootGroup.DELETE("/users/:username",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.DeleteUserHandler,
 	)
 
 	// Update User Role (Admin Only)
-	rootGroup.PUT("/user/:username/role",
+	rootGroup.PUT("/users/:username/role",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.UpdateUserRoleHandler,

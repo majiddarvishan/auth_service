@@ -3,6 +3,8 @@ package database
 import (
 	"errors"
 	"sync"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type MockStore struct {
@@ -26,7 +28,25 @@ func NewMockStore() *MockStore {
 
 // Init is a no-op for MockStore.
 func (m *MockStore) Init() error {
-	// nothing to do
+
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), 14)
+	if err != nil {
+		return errors.New("Could not hash password")
+	}
+
+	u := &User{
+		Username: "admin",
+		Password: string(hashedPassword),
+		RoleID:   1,
+		Role: Role{
+			Name:        "admin",
+			Description: "admin",
+		},
+		Balance: 10000,
+	}
+
+	u.ID = m.allocateID()
+	m.users[u.ID] = u
 	return nil
 }
 

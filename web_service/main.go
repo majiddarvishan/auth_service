@@ -23,7 +23,7 @@ func main() {
     r := gin.Default()
 
     // Final Service Endpoints
-    r.POST("/sms/sendsms", func(c *gin.Context) {
+    r.POST("/api/v1/sms/sendsms", func(c *gin.Context) {
         var msg Message
         if err := c.ShouldBindJSON(&msg); err != nil {
             c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})

@@ -1,8 +1,8 @@
 @no-ssl-verify
 
 ###
-POST https://localhost:8443/v1/api/sms/send
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc4MTcxNzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjJ9.XG_SftWXN1amSR2LSxF0qijey3X4vYuEHWJi2aGeliY
+POST https://localhost:8443/v1/api/sms/sendsms
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTY1NTEzMzksInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.YntQBkv4ew0bqYGscKfXszZQMzSXkIXDTPHBRL6RHVw
 Content-Type: application/json
 
 {
