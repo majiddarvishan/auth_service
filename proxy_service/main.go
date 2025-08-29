@@ -4,6 +4,7 @@ import (
 	"auth_service/config"
 	"auth_service/database"
 	"auth_service/routes"
+	"flag"
 	"fmt"
 )
 
@@ -22,12 +23,16 @@ import (
 // @host localhost:8080
 // @BasePath /v1/api
 func main() {
+    dbMode := flag.String("d", "postgres", "Database mode")
+    flag.Parse()
+
 	// Load configuration from .env.
 	config.LoadConfig()
 
 	// Initialize the database.
 	// _, err := database.NewStore("mock")
-	_, err := database.NewStore("postgres")
+	// _, err := database.NewStore("postgres")
+     _, err := database.NewStore(*dbMode)
 	if err != nil {
 		fmt.Println("Error in creating databse connection")
 		return

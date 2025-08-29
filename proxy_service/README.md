@@ -36,9 +36,23 @@ mkcert -install
 mkcert localhost 127.0.0.1 ::1
 ```
 
+## Generate the Swagger Documentation
 
+```sh
+go get -u github.com/swaggo/swag/cmd/swag
+go get -u github.com/swaggo/gin-swagger
+go get -u github.com/swaggo/files
 
-swaggertodoc
+swag init -g main.go  -o docs
+```
+
+- to view output
+
+```bash
+https://<URL>/swagger/index.html
+```
+
+### swaggertodoc
 
 https://mvnrepository.com/artifact/io.github.swagger2markup/swagger2markup-cli
 wget https://repo1.maven.org/maven2/io/github/swagger2markup/swagger2markup-cli/1.3.3/swagger2markup-cli-1.3.3.jar

@@ -242,7 +242,7 @@ func SecureLoginHandler(c *gin.Context) {
 // @Failure      400       {object}  map[string]string  "Username is required"
 // @Failure      404       {object}  map[string]string  "User not found"
 // @Failure      500       {object}  map[string]string  "Could not delete user"
-// @Router       /user/{username} [delete]
+// @Router       /users/{username} [delete]
 func DeleteUserHandler(c *gin.Context) {
 	// Get the username from the URL parameter.
 	username := c.Param("username")
@@ -280,7 +280,7 @@ type RoleUpdateRequest struct {
 // @Failure      400       {object}  map[string]string  "Invalid input or missing fields"
 // @Failure      404       {object}  map[string]string  "User not found"
 // @Failure      500       {object}  map[string]string  "Failed to update user role"
-// @Router       /user/{username}/role [put]
+// @Router       /users/{username}/role [put]
 func UpdateUserRoleHandler(c *gin.Context) {
 	// Get the username from the URL parameter.
 	username := c.Param("username")
