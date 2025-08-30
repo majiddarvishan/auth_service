@@ -130,7 +130,8 @@ func NewMultiTargetReverseProxy(targets []*url.URL) *httputil.ReverseProxy {
 				}
 
 				req.Header.Del("Authorization")
-				req.Header.Add("user-id", user.Username)
+				req.Header.Add("user-id", strconv.Itoa(val))
+                req.Header.Add("user-name", user.Username)
 
 				break
 			}
