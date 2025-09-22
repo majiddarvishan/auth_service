@@ -44,6 +44,7 @@ type Store interface {
 	GetAllCustomEndpoints() ([]CustomEndpoint, error)
 	UpdateCustomEndpoint(c *CustomEndpoint) error
 	DeleteCustomEndpoint(id uint) error
+    DeleteCustomEndpointByPath(path string) error
 }
 
 var DB Store

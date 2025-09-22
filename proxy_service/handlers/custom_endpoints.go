@@ -71,7 +71,7 @@ type SwaggerCustomEndpoint struct {
 // CreateCustomEndpointHandler create custom endpoint.
 // @Summary      Create Custom Endpoint
 // @Description  Create Custom Endpoint to redirect its requests to another endpoints
-// @Tags         Admin
+// @Tags         CustomEndpoints
 // @Accept       json
 // @Produce      json
 // @Param        request  body      SwaggerCustomEndpoint  true  "CustomEndpoint payload"
@@ -103,14 +103,70 @@ func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc 
 		req.Path += "/*path"
 		req.Enabled = true
 
-        if err := database.DB.CreateCustomEndpoint(&req); err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create custom endpoint"})
+		if err := database.DB.CreateCustomEndpoint(&req); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create custom endpoint"})
 			return
-        }
+		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint created successfully", "endpoint": req})
 
 		registerCustomEndpointDynamic(dynamicGroup, &req)
+
+		c.Next()
+	}
+}
+
+// DeleteCustomEndpointHandler deletes a custom endpoint dynamically.
+//
+// @Summary      Delete a custom endpoint
+// @Description  Deletes a previously registered custom endpoint by path and restores a 404 handler for it.
+// @Tags         CustomEndpoints
+// @Accept       json
+// @Produce      json
+// @Param        request body SwaggerCustomEndpoint true "Custom endpoint object (must include path)"
+// @Success      200 {object} map[string]interface{} "Custom endpoint deleted successfully"
+// @Failure      400 {object} map[string]interface{} "Invalid JSON payload"
+// @Failure      500 {object} map[string]interface{} "Failed to delete or find custom endpoint"
+// @Router       /admin/custom-endpoints [delete]
+func DeleteCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req database.CustomEndpoint
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
+			return
+		}
+
+		req.Path += "/*path"
+		endPoint, err := database.DB.GetCustomEndpointByPath(req.Path)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find custom endpoint", "endpoint": req.Path})
+			return
+		}
+
+		if err = database.DB.DeleteCustomEndpointByPath(req.Path); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete custom endpoint", "endpoint": req.Path})
+			return
+		}
+
+		notFoundHandler := func(c *gin.Context) {
+			c.JSON(404, gin.H{"error": "Not found"})
+			c.Abort() // Important: stop the chain
+		}
+
+		switch endPoint.Method {
+		case "GET":
+			dynamicGroup.GET(endPoint.Path, notFoundHandler)
+		case "POST":
+			dynamicGroup.POST(endPoint.Path, notFoundHandler)
+		case "PUT":
+			dynamicGroup.PUT(endPoint.Path, notFoundHandler)
+		case "DELETE":
+			dynamicGroup.DELETE(endPoint.Path, notFoundHandler)
+		default:
+			dynamicGroup.Any(endPoint.Path, notFoundHandler)
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint deleted successfully", "endpoint": req.Path})
 
 		c.Next()
 	}

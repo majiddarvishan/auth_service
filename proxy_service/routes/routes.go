@@ -113,11 +113,11 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		handlers.CreateCustomEndpointHandler(dynamicGroup),
 	)
 
-	// httpsRouter.DELETE("/admin/custom-endpoints/:endpoint",
-	// 	middleware.AuthMiddleware,
-	// 	middleware.RoleMiddleware("admin"),
-	// 	handlers.CreateCustomEndpointHandler(dynamicGroup),
-	// )
+    rootGroup.DELETE("/admin/custom-endpoints",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.DeleteCustomEndpointHandler(dynamicGroup),
+	)
 
 	// Dynamically register the custom endpoints from the database.
 	handlers.RegisterCustomEndpoints(rootGroup)

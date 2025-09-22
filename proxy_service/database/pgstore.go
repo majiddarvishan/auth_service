@@ -275,3 +275,7 @@ func (s *PGStore) UpdateCustomEndpoint(c *CustomEndpoint) error { return s.db.Sa
 func (s *PGStore) DeleteCustomEndpoint(id uint) error {
 	return s.db.Delete(&CustomEndpoint{}, id).Error
 }
+
+func (s *PGStore) DeleteCustomEndpointByPath(path string) error {
+    return s.db.Delete("path = ?", path).Error
+}

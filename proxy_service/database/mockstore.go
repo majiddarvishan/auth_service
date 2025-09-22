@@ -292,3 +292,25 @@ func (m *MockStore) DeleteCustomEndpoint(id uint) error {
 	delete(m.customEndpoints, id)
 	return nil
 }
+
+func (m *MockStore) DeleteCustomEndpointByPath(path string) error {
+    m.mu.Lock()
+	defer m.mu.Unlock()
+
+    id := -1
+	for _, c := range m.customEndpoints {
+		if c.Path == path {
+            id = int(c.ID)
+            break
+		}
+	}
+
+    if id == -1 {
+        return errors.New("custom endpoint not found")
+    }
+
+    delete(m.customEndpoints, uint(id))
+
+	return nil
+}
+

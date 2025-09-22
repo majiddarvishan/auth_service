@@ -23,7 +23,7 @@ import (
 // @host localhost:8080
 // @BasePath /v1/api
 func main() {
-    dbMode := flag.String("d", "postgres", "Database mode")
+    dbMode := flag.String("d", "postgres", "Database mode. postgres or mock")
     flag.Parse()
 
 	// Load configuration from .env.
