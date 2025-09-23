@@ -270,12 +270,15 @@ func (s *PGStore) GetAllCustomEndpoints() ([]CustomEndpoint, error) {
 	return endpoints, nil
 }
 
-func (s *PGStore) UpdateCustomEndpoint(c *CustomEndpoint) error { return s.db.Save(c).Error }
+func (s *PGStore) UpdateCustomEndpoint(c *CustomEndpoint) error {
+	return s.db.Save(c).Error
+}
 
 func (s *PGStore) DeleteCustomEndpoint(id uint) error {
 	return s.db.Delete(&CustomEndpoint{}, id).Error
 }
 
 func (s *PGStore) DeleteCustomEndpointByPath(path string) error {
-    return s.db.Delete("path = ?", path).Error
+    // permanently delete the row
+	return  s.db.Unscoped().Where("path = ?", path).Delete(&CustomEndpoint{}).Error
 }

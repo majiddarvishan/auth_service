@@ -19,9 +19,24 @@ services:
       - DB_PORT=5432
       - DB_USER_NAME=postgres
       - DB_PASSWORD=postgres
-      - DB_NAME=mydb
+      - DB_NAME=proxy_db
     ports:
       - 8443:8443
 
+  postgres:
+    image: postgres:17.4
+    restart: always
+    container_name: proxy_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: proxy_db
+    ports:
+      - 5432:5432
+    volumes:
+       - /etc/localtime:/etc/localtime:ro
+       - ./postgres_data:/var/lib/postgresql/data
+
 volumes:
   output_data: {}
+  postgres_data:

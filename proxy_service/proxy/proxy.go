@@ -18,6 +18,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var deletedCustomRoute map[string]*database.CustomEndpoint
+
+func init() {
+	deletedCustomRoute = make(map[string]*database.CustomEndpoint)
+}
+
 func toInt(i interface{}) (int, error) {
 	switch v := i.(type) {
 	case int:
@@ -115,7 +121,7 @@ func NewMultiTargetReverseProxy(targets []*url.URL) *httputil.ReverseProxy {
 		}
 
 		for key, value := range claims {
-			fmt.Printf("  %s: %v\n", key, value)
+			// fmt.Printf("  %s: %v\n", key, value)
 			if key == "user" {
 				val, err := toInt(value)
 				if err != nil {
@@ -131,7 +137,7 @@ func NewMultiTargetReverseProxy(targets []*url.URL) *httputil.ReverseProxy {
 
 				req.Header.Del("Authorization")
 				req.Header.Add("user-id", strconv.Itoa(val))
-                req.Header.Add("user-name", user.Username)
+				req.Header.Add("user-name", user.Username)
 
 				break
 			}
@@ -141,10 +147,18 @@ func NewMultiTargetReverseProxy(targets []*url.URL) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{Director: director}
 }
 
-func ProxyToEndpoint(c *gin.Context, targetEndpoints []string) {
+func ProxyToEndpoint(c *gin.Context, ep *database.CustomEndpoint) {
+	fmt.Printf("call ProxyToEndpoint %v\n", ep)
+
+	_, exists := deletedCustomRoute[ep.Path+"/*path"]
+	if exists {
+        c.JSON(404, gin.H{"error": "Not found"})
+        return
+	}
+
 	targets := []*url.URL{}
 
-	for _, target := range targetEndpoints {
+	for _, target := range ep.Endpoints {
 		t, err := url.Parse(target)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid target endpoint"})
@@ -158,13 +172,6 @@ func ProxyToEndpoint(c *gin.Context, targetEndpoints []string) {
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
 
-// func ProxyToEndpoint(c *gin.Context, targetEndpoint string) {
-// 	targetURL, err := url.Parse(targetEndpoint)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid target endpoint"})
-// 		return
-// 	}
-
-// 	proxy := httputil.NewSingleHostReverseProxy(targetURL)
-// 	proxy.ServeHTTP(c.Writer, c.Request)
-// }
+func DeleteEndpoint(ep *database.CustomEndpoint) {
+	deletedCustomRoute[ep.Path+"/*path"] = ep
+}

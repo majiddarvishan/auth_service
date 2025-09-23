@@ -105,7 +105,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDUxMzE1O
 ###
 POST https://localhost:8443/v1/api/admin/custom-endpoints
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTY2NTA3NTgsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.fQGdTzjjeJt84DVW82sdIQnk-_KMwHVT-9rQQNoJOs0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTg3MDQzNTcsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.ufe2_jz-R2Fr7DmclUqC7_YD6osTlskla0_MXhIJgqI
 
 {
   "path": "/sms",
@@ -115,6 +115,15 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTY2NTA3N
   ],
   "needAccounting": false,
   "enabled": true
+}
+
+###
+DELETE https://localhost:8443/v1/api/admin/custom-endpoints
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTg3MDQzNTcsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.ufe2_jz-R2Fr7DmclUqC7_YD6osTlskla0_MXhIJgqI
+
+{
+  "path": "/sms"
 }
 
 

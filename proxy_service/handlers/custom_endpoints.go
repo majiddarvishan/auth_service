@@ -15,7 +15,7 @@ import (
 func registerCustomEndpointDynamic(r *gin.RouterGroup, ep *database.CustomEndpoint) {
 	// Wrap the handler with the endpoint parameter.
 	wrappedHandler := func(c *gin.Context) {
-		proxy.ProxyToEndpoint(c, ep.Endpoints)
+		proxy.ProxyToEndpoint(c, ep)
 	}
 
 	// Build the handler chain for the dynamic route.
@@ -136,37 +136,41 @@ func DeleteCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc 
 			return
 		}
 
-		req.Path += "/*path"
-		endPoint, err := database.DB.GetCustomEndpointByPath(req.Path)
+		/* Since Delete is a write-only operation, it does not fetch or populate the fields of the deleted record.
+		 * So we explicitly query the record first to retrive data.
+		 */
+		endPoint, err := database.DB.GetCustomEndpointByPath(req.Path + "/*path")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find custom endpoint", "endpoint": req.Path})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find custom endpoint", "path": req.Path})
 			return
 		}
 
-		if err = database.DB.DeleteCustomEndpointByPath(req.Path); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete custom endpoint", "endpoint": req.Path})
+		err = database.DB.DeleteCustomEndpointByPath(req.Path + "/*path")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete custom endpoint", "path": req.Path})
 			return
 		}
 
-		notFoundHandler := func(c *gin.Context) {
-			c.JSON(404, gin.H{"error": "Not found"})
-			c.Abort() // Important: stop the chain
-		}
+		// notFoundHandler := func(c *gin.Context) {
+		// 	c.JSON(404, gin.H{"error": "Not found"})
+		// 	c.Abort() // Important: stop the chain
+		// }
 
-		switch endPoint.Method {
-		case "GET":
-			dynamicGroup.GET(endPoint.Path, notFoundHandler)
-		case "POST":
-			dynamicGroup.POST(endPoint.Path, notFoundHandler)
-		case "PUT":
-			dynamicGroup.PUT(endPoint.Path, notFoundHandler)
-		case "DELETE":
-			dynamicGroup.DELETE(endPoint.Path, notFoundHandler)
-		default:
-			dynamicGroup.Any(endPoint.Path, notFoundHandler)
-		}
+		// switch endPoint.Method {
+		// case "GET":
+		// 	dynamicGroup.GET(endPoint.Path, notFoundHandler)
+		// case "POST":
+		// 	dynamicGroup.POST(endPoint.Path, notFoundHandler)
+		// case "PUT":
+		// 	dynamicGroup.PUT(endPoint.Path, notFoundHandler)
+		// case "DELETE":
+		// 	dynamicGroup.DELETE(endPoint.Path, notFoundHandler)
+		// default:
+		// 	dynamicGroup.Any(endPoint.Path, notFoundHandler)
+		// }
+		proxy.DeleteEndpoint(endPoint)
 
-		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint deleted successfully", "endpoint": req.Path})
+		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint deleted successfully", "path": req.Path})
 
 		c.Next()
 	}
