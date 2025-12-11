@@ -48,6 +48,18 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
+	// Validate password strength
+	if len(req.Password) < 8 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password must be at least 8 characters long"})
+		return
+	}
+
+	// Validate username length
+	if len(req.Username) < 3 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username must be at least 3 characters long"})
+		return
+	}
+
 	// Hash the password.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 14)
 	if err != nil {
@@ -251,7 +263,14 @@ func DeleteUserHandler(c *gin.Context) {
 		return
 	}
 
-	err := database.DB.DeleteUserByUsername(username)
+	// Check if user exists first
+	_, err := database.DB.GetUserByUsername(username)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	err = database.DB.DeleteUserByUsername(username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
 		return

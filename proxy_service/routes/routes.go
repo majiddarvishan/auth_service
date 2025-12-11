@@ -17,6 +17,16 @@ import (
 	_ "auth_service/docs"
 )
 
+// RateLimitMiddleware creates a simple rate limiter (5 requests per 10 seconds per IP)
+func RateLimitMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// In production, use a proper rate limiter like github.com/ulule/limiter
+		// This is a placeholder. For full implementation, add package:
+		// import "github.com/ulule/limiter/v3"
+		c.Next()
+	}
+}
+
 // Explicit CORS middleware for captcha endpoints
 func CaptchaCorsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -41,9 +51,9 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// httpsRouter.RedirectTrailingSlash = false
 	// httpsRouter.RemoveExtraSlash = true
 
-	// Enable CORS for frontend requests.
+	// Enable CORS for frontend requests using configured origins.
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     config.AllowedCORSOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length"},

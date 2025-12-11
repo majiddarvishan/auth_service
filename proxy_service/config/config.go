@@ -3,6 +3,8 @@ package config
 import (
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -22,6 +24,9 @@ var (
 
 	// AccountingEndpoint is the URL for the Accounting-Service
 	AccountingEndpoint string
+
+	// AllowedCORSOrigins is a comma-separated list of allowed CORS origins
+	AllowedCORSOrigins []string
 
 	DatabaseHost string
 
@@ -47,8 +52,18 @@ func LoadConfig() {
 	}
 
 	TLSPath = os.Getenv("TLS_PATH")
-	if BaseApi == "" {
+	if TLSPath == "" {
 		log.Fatal("TLS_PATH is not set in .env file")
+	}
+
+	// Validate TLS certificate files exist
+	certFile := filepath.Join(TLSPath, "localhost.pem")
+	keyFile := filepath.Join(TLSPath, "localhost-key.pem")
+	if _, err := os.Stat(certFile); err != nil {
+		log.Fatal("Certificate file not found at", certFile, ":", err)
+	}
+	if _, err := os.Stat(keyFile); err != nil {
+		log.Fatal("Key file not found at", keyFile, ":", err)
 	}
 
 	SecretKey = os.Getenv("SECRET_KEY")
@@ -57,7 +72,7 @@ func LoadConfig() {
 	}
 
 	p := os.Getenv("TOKEN_EXPIRATION_PERIOD")
-	if SecretKey == "" {
+	if p == "" {
 		log.Fatal("TOKEN_EXPIRATION_PERIOD is not set in .env file")
 	}
 
@@ -96,5 +111,14 @@ func LoadConfig() {
 	DatabaseName = os.Getenv("DB_NAME")
 	if DatabaseName == "" {
 		log.Fatal("DB_NAME is not set in .env file")
+	}
+
+	// Load CORS allowed origins from environment variable
+	corsOriginsEnv := os.Getenv("ALLOWED_CORS_ORIGINS")
+	if corsOriginsEnv == "" {
+		// Default to localhost for development
+		AllowedCORSOrigins = []string{"http://localhost:3000", "http://localhost:8080"}
+	} else {
+		AllowedCORSOrigins = strings.Split(corsOriginsEnv, ",")
 	}
 }

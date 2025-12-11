@@ -4,6 +4,7 @@ import (
 	"auth_service/config"
 	"fmt"
 	"log"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -23,13 +24,24 @@ func (s *PGStore) Init() error {
 	var err error
 
 	// Construct the connection string
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable  TimeZone=UTC",
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=UTC",
 		config.DatabaseHost, config.DatabasePort, config.DatabaseUserName, config.DatabasePassword, config.DatabaseName)
 
 	s.db, err = gorm.Open(postgres.Open(connStr), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
+
+	// Configure connection pooling
+	sqlDB, err := s.db.DB()
+	if err != nil {
+		log.Fatal("Failed to get database instance:", err)
+	}
+
+	// Set connection pool parameters for better performance
+	sqlDB.SetMaxOpenConns(25)           // Max open connections
+	sqlDB.SetMaxIdleConns(5)            // Max idle connections
+	sqlDB.SetConnMaxLifetime(5 * time.Minute) // Connection lifetime
 
 	// Auto-migrate models.
 	if err := s.db.AutoMigrate(&User{}, &Role{}, &AccountingRule{}, &CustomEndpoint{}, Phone{}); err != nil {

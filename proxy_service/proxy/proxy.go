@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"sync"
 
 	"math/rand"
 	"net/http"
@@ -18,7 +19,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var deletedCustomRoute map[string]*database.CustomEndpoint
+var (
+	deletedCustomRoute map[string]*database.CustomEndpoint
+	deletedRouteMutex  sync.RWMutex
+)
 
 func init() {
 	deletedCustomRoute = make(map[string]*database.CustomEndpoint)
@@ -110,29 +114,28 @@ func NewMultiTargetReverseProxy(targets []*url.URL) *httputil.ReverseProxy {
 		decoded, err := base64.RawURLEncoding.DecodeString(payload)
 		if err != nil {
 			fmt.Println("Error decoding payload:", err)
-			return
+			return // Don't modify request on JWT error
 		}
 
 		// Convert JSON payload to a map
 		var claims map[string]interface{}
 		if err := json.Unmarshal(decoded, &claims); err != nil {
 			fmt.Println("Error unmarshaling JSON:", err)
-			return
+			return // Don't modify request on JWT error
 		}
 
 		for key, value := range claims {
-			// fmt.Printf("  %s: %v\n", key, value)
 			if key == "user" {
 				val, err := toInt(value)
 				if err != nil {
 					fmt.Printf("invalid user id %v\n", value)
-					return
+					return // Don't modify request if user ID invalid
 				}
 
 				user, err := database.DB.GetUserByID(uint(val))
 				if err != nil {
 					fmt.Printf("Error in token: %v\n", err)
-					return
+					return // Don't modify request if user not found
 				}
 
 				req.Header.Del("Authorization")
@@ -144,16 +147,17 @@ func NewMultiTargetReverseProxy(targets []*url.URL) *httputil.ReverseProxy {
 		}
 	}
 
-	return &httputil.ReverseProxy{Director: director}
+return &httputil.ReverseProxy{Director: director}
 }
 
 func ProxyToEndpoint(c *gin.Context, ep *database.CustomEndpoint) {
-	fmt.Printf("call ProxyToEndpoint %v\n", ep)
-
+	deletedRouteMutex.RLock()
 	_, exists := deletedCustomRoute[ep.Path+"/*path"]
+	deletedRouteMutex.RUnlock()
+
 	if exists {
-        c.JSON(404, gin.H{"error": "Not found"})
-        return
+		c.JSON(404, gin.H{"error": "Not found"})
+		return
 	}
 
 	targets := []*url.URL{}
@@ -173,5 +177,7 @@ func ProxyToEndpoint(c *gin.Context, ep *database.CustomEndpoint) {
 }
 
 func DeleteEndpoint(ep *database.CustomEndpoint) {
+	deletedRouteMutex.Lock()
 	deletedCustomRoute[ep.Path+"/*path"] = ep
+	deletedRouteMutex.Unlock()
 }

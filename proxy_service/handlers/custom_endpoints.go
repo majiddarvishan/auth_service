@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"auth_service/database"
@@ -88,12 +89,24 @@ func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc 
 			return
 		}
 
-		// Validate endpoints format
+		// Validate endpoints format using url.Parse
 		for _, endpoint := range req.Endpoints {
-			if endpoint == "" || !strings.HasPrefix(endpoint, "http") {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing endpoint URL"})
+			if endpoint == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Endpoint URL cannot be empty"})
 				return
 			}
+			// Use url.Parse to validate proper URL structure
+			parsedURL, err := url.Parse(endpoint)
+			if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid endpoint URL format. Must be valid absolute URL (e.g., http://example.com/path)"})
+				return
+			}
+		}
+
+		// Validate path to prevent traversal attacks
+		if strings.Contains(req.Path, "..") || strings.Contains(req.Path, "//") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid path: cannot contain '..' or '//'"})
+			return
 		}
 
 		if req.Method == "" {
@@ -108,7 +121,7 @@ func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc 
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint created successfully", "endpoint": req})
+		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint created successfully"})
 
 		registerCustomEndpointDynamic(dynamicGroup, &req)
 
