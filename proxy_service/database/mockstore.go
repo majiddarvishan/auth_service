@@ -34,15 +34,18 @@ func (m *MockStore) Init() error {
 		return errors.New("Could not hash password")
 	}
 
+	adminRole := &Role{
+		Name:        "admin",
+		Description: "Administrator role",
+	}
+	adminRole.ID = m.allocateID()
+	m.roles[adminRole.ID] = adminRole
+
 	u := &User{
 		Username: "admin",
 		Password: string(hashedPassword),
-		RoleID:   1,
-		Role: Role{
-			Name:        "admin",
-			Description: "admin",
-		},
-		Balance: 10000,
+		Roles:    []Role{*adminRole},
+		Balance:  10000,
 	}
 
 	u.ID = m.allocateID()
@@ -97,6 +100,124 @@ func (m *MockStore) GetUserAndRoleByUsername(username string) (*User, error) {
 }
 
 func (m *MockStore) UpdateUserRoleByUsername(username, roleName string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, u := range m.users {
+		if u.Username == username {
+			// Find the role
+			for _, r := range m.roles {
+				if r.Name == roleName {
+					u.Roles = []Role{*r}
+					return nil
+				}
+			}
+			return errors.New("role not found")
+		}
+	}
+	return errors.New("user not found")
+}
+
+// AddRolesToUser adds one or more roles to a user
+func (m *MockStore) AddRolesToUser(userID uint, roleNames []string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	
+	user, ok := m.users[userID]
+	if !ok {
+		return errors.New("user not found")
+	}
+
+	for _, roleName := range roleNames {
+		found := false
+		for _, r := range m.roles {
+			if r.Name == roleName {
+				// Check if role already exists
+				exists := false
+				for _, ur := range user.Roles {
+					if ur.ID == r.ID {
+						exists = true
+						break
+					}
+				}
+				if !exists {
+					user.Roles = append(user.Roles, *r)
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.New("role not found: " + roleName)
+		}
+	}
+	return nil
+}
+
+// RemoveRolesFromUser removes one or more roles from a user
+func (m *MockStore) RemoveRolesFromUser(userID uint, roleNames []string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	
+	user, ok := m.users[userID]
+	if !ok {
+		return errors.New("user not found")
+	}
+
+	for _, roleName := range roleNames {
+		newRoles := []Role{}
+		found := false
+		for _, ur := range user.Roles {
+			if ur.Name == roleName {
+				found = true
+			} else {
+				newRoles = append(newRoles, ur)
+			}
+		}
+		if !found {
+			return errors.New("role not found: " + roleName)
+		}
+		user.Roles = newRoles
+	}
+	return nil
+}
+
+// GetUserRoles returns all roles for a user
+func (m *MockStore) GetUserRoles(userID uint) ([]Role, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	
+	user, ok := m.users[userID]
+	if !ok {
+		return nil, errors.New("user not found")
+	}
+	return user.Roles, nil
+}
+
+// SetUserRoles replaces all user roles with the given ones
+func (m *MockStore) SetUserRoles(userID uint, roleNames []string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	
+	user, ok := m.users[userID]
+	if !ok {
+		return errors.New("user not found")
+	}
+
+	newRoles := []Role{}
+	for _, roleName := range roleNames {
+		found := false
+		for _, r := range m.roles {
+			if r.Name == roleName {
+				newRoles = append(newRoles, *r)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.New("role not found: " + roleName)
+		}
+	}
+	user.Roles = newRoles
 	return nil
 }
 

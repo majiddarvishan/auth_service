@@ -93,12 +93,16 @@ func AdminDashboardHandler(c *gin.Context) {
         return
     }
 
-	// Format response to include only username and role.
-	var userData []map[string]string
+	// Format response to include only username and roles.
+	var userData []map[string]interface{}
 	for _, user := range users {
-		userData = append(userData, map[string]string{
+		roleNames := make([]string, len(user.Roles))
+		for i, r := range user.Roles {
+			roleNames[i] = r.Name
+		}
+		userData = append(userData, map[string]interface{}{
 			"username": user.Username,
-			"role":     user.Role.Name,
+			"roles":    roleNames,
 		})
 	}
 

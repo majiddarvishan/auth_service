@@ -163,6 +163,31 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		handlers.UpdateUserRoleHandler,
 	)
 
+	// Multi-role management endpoints (Admin Only)
+	rootGroup.GET("/users/:username/roles",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.GetUserRoles,
+	)
+
+	rootGroup.POST("/users/:username/roles",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.AddUserRoles,
+	)
+
+	rootGroup.PUT("/users/:username/roles",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.SetUserRoles,
+	)
+
+	rootGroup.DELETE("/users/:username/roles",
+		middleware.AuthMiddleware,
+		middleware.RoleMiddleware("admin"),
+		handlers.RemoveUserRoles,
+	)
+
 	// Create New Role (Admin Only)
 	rootGroup.POST("/roles",
 		middleware.AuthMiddleware,

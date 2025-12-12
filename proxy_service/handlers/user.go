@@ -128,7 +128,7 @@ func RegisterHandler(c *gin.Context) {
 	user := database.User{
 		Username: req.Username,
 		Password: string(hashedPassword),
-		RoleID:   role.ID,
+		Roles:    []database.Role{*role},
 	}
 
 	// // Use provided role or assign a default role.
@@ -196,11 +196,19 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	// Create JWT claims: subject, role, and expiry.
+	// Create JWT claims: subject, first role, and expiry.
+	// For backward compatibility, use the first role as the primary role
+	var primaryRole string
+	if len(user.Roles) > 0 {
+		primaryRole = user.Roles[0].Name
+	} else {
+		primaryRole = "guest"
+	}
+
 	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
 	claims := jwt.MapClaims{
 		"user": user.ID,
-		"role": user.Role.Name,
+		"role": primaryRole,
 		"exp":  expirationTime.Unix(),
 	}
 
@@ -270,11 +278,19 @@ func SecureLoginHandler(c *gin.Context) {
 		return
 	}
 
-	// Create JWT claims: subject, role, and expiry.
+	// Create JWT claims: subject, first role, and expiry.
+	// For backward compatibility, use the first role as the primary role
+	var primaryRole string
+	if len(user.Roles) > 0 {
+		primaryRole = user.Roles[0].Name
+	} else {
+		primaryRole = "guest"
+	}
+
 	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
 	claims := jwt.MapClaims{
 		"user": user.ID,
-		"role": user.Role.Name,
+		"role": primaryRole,
 		"exp":  expirationTime.Unix(),
 	}
 

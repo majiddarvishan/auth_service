@@ -18,6 +18,12 @@ type Store interface {
 
 	GetUserAndRoleByUsername(username string) (*User, error)
 	UpdateUserRoleByUsername(username, roleName string) error
+	
+	// Multi-role support
+	AddRolesToUser(userID uint, roleNames []string) error
+	RemoveRolesFromUser(userID uint, roleNames []string) error
+	GetUserRoles(userID uint) ([]Role, error)
+	SetUserRoles(userID uint, roleNames []string) error // Replace all roles
 
     GetUserPhones(userName string) ([]string, error)
     AddPhoneForUser(username string, phones []string) error

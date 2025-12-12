@@ -7,10 +7,9 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"uniqueIndex"`
+	Username string  `gorm:"uniqueIndex"`
 	Password string
-	RoleID   uint    // Foreign key field
-	Role     Role    `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Roles    []Role  `gorm:"many2many:user_roles;"` // Many-to-many relationship with roles
 	Balance  float64 `gorm:"default:0"`
 }
 
@@ -18,6 +17,7 @@ type Role struct {
 	gorm.Model
 	Name        string `gorm:"uniqueIndex;not null"`
 	Description string
+	Users       []User `gorm:"many2many:user_roles;"` // Many-to-many relationship with users
 }
 
 type AccountingRule struct {

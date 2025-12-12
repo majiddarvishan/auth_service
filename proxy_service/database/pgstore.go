@@ -74,7 +74,7 @@ func (s *PGStore) GetUserByUsername(username string) (*User, error) {
 func (s *PGStore) GetUserAndRoleByUsername(username string) (*User, error) {
 	var u User
 	if err := s.db.
-		Preload("Role").
+		Preload("Roles").
 		Where("username = ?", username).
 		First(&u).Error; err != nil {
 		return nil, fmt.Errorf("User not found")
@@ -96,21 +96,87 @@ func (s *PGStore) UpdateUserRoleByUsername(username, roleName string) error {
 		return fmt.Errorf("Role not found")
 	}
 
-	// Update the user's role.
-	user.RoleID = role.ID
+	// Replace all roles with this single role
+	return s.db.Model(&user).Association("Roles").Replace([]Role{role})
+}
 
-	if err := s.db.Save(&user).Error; err != nil {
-		return err
+// AddRolesToUser adds one or more roles to a user
+func (s *PGStore) AddRolesToUser(userID uint, roleNames []string) error {
+	// Find user
+	var user User
+	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return fmt.Errorf("User not found")
 	}
 
-	return nil
+	// Find roles
+	var roles []Role
+	if err := s.db.Where("name IN ?", roleNames).Find(&roles).Error; err != nil {
+		return fmt.Errorf("Could not find roles")
+	}
+
+	if len(roles) == 0 {
+		return fmt.Errorf("No valid roles found")
+	}
+
+	// Add roles to user (many-to-many)
+	return s.db.Model(&user).Association("Roles").Append(roles)
+}
+
+// RemoveRolesFromUser removes one or more roles from a user
+func (s *PGStore) RemoveRolesFromUser(userID uint, roleNames []string) error {
+	// Find user
+	var user User
+	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return fmt.Errorf("User not found")
+	}
+
+	// Find roles
+	var roles []Role
+	if err := s.db.Where("name IN ?", roleNames).Find(&roles).Error; err != nil {
+		return fmt.Errorf("Could not find roles")
+	}
+
+	// Remove roles from user
+	return s.db.Model(&user).Association("Roles").Delete(roles)
+}
+
+// GetUserRoles returns all roles for a user
+func (s *PGStore) GetUserRoles(userID uint) ([]Role, error) {
+	var user User
+	if err := s.db.Preload("Roles").Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, fmt.Errorf("User not found")
+	}
+
+	return user.Roles, nil
+}
+
+// SetUserRoles replaces all user roles with the given ones
+func (s *PGStore) SetUserRoles(userID uint, roleNames []string) error {
+	// Find user
+	var user User
+	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return fmt.Errorf("User not found")
+	}
+
+	// Find roles
+	var roles []Role
+	if err := s.db.Where("name IN ?", roleNames).Find(&roles).Error; err != nil {
+		return fmt.Errorf("Could not find roles")
+	}
+
+	if len(roles) == 0 {
+		return fmt.Errorf("No valid roles found")
+	}
+
+	// Replace all roles
+	return s.db.Model(&user).Association("Roles").Replace(roles)
 }
 
 func (s *PGStore) GetAllUsers() ([]User, error) {
 	//  Load users and their Roles
 	var users []User
 	if err := s.db.
-		Preload("Role").
+		Preload("Roles").
 		Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("Failed to retrieve users")
 	}
