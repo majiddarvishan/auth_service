@@ -33,6 +33,7 @@ type Store interface {
 	GetRoleByID(id uint) (*Role, error)
 	GetRoleByName(name string) (*Role, error)
 	GetAllRoles() ([]Role, error)
+	GetRoles(limit, offset int) ([]Role, int64, error) // Paginated roles
 	UpdateRole(r *Role) error
 	DeleteRole(id uint) error
 
@@ -51,6 +52,14 @@ type Store interface {
 	UpdateCustomEndpoint(c *CustomEndpoint) error
 	DeleteCustomEndpoint(id uint) error
     DeleteCustomEndpointByPath(path string) error
+
+	// RefreshToken
+	CreateRefreshToken(rt *RefreshToken) error
+	GetRefreshToken(token string) (*RefreshToken, error)
+	ValidateRefreshToken(token string) (*RefreshToken, error) // Check if valid and not revoked
+	RevokeRefreshToken(token string) error
+	RevokeAllUserTokens(userID uint) error // Logout from all devices
+	DeleteExpiredTokens() error // Cleanup expired tokens
 }
 
 var DB Store

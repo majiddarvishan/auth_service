@@ -13,6 +13,7 @@ type MockStore struct {
 	roles           map[uint]*Role
 	accountingRules map[uint]*AccountingRule
 	customEndpoints map[uint]*CustomEndpoint
+	refreshTokens   map[string]*RefreshToken
 	nextID          uint
 }
 
@@ -22,6 +23,7 @@ func NewMockStore() *MockStore {
 		roles:           make(map[uint]*Role),
 		accountingRules: make(map[uint]*AccountingRule),
 		customEndpoints: make(map[uint]*CustomEndpoint),
+		refreshTokens:   make(map[string]*RefreshToken),
 		nextID:          1,
 	}
 }
@@ -29,7 +31,7 @@ func NewMockStore() *MockStore {
 // Init is a no-op for MockStore.
 func (m *MockStore) Init() error {
 
-    hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), 14)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), 14)
 	if err != nil {
 		return errors.New("Could not hash password")
 	}
@@ -121,7 +123,7 @@ func (m *MockStore) UpdateUserRoleByUsername(username, roleName string) error {
 func (m *MockStore) AddRolesToUser(userID uint, roleNames []string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	user, ok := m.users[userID]
 	if !ok {
 		return errors.New("user not found")
@@ -157,7 +159,7 @@ func (m *MockStore) AddRolesToUser(userID uint, roleNames []string) error {
 func (m *MockStore) RemoveRolesFromUser(userID uint, roleNames []string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	user, ok := m.users[userID]
 	if !ok {
 		return errors.New("user not found")
@@ -185,7 +187,7 @@ func (m *MockStore) RemoveRolesFromUser(userID uint, roleNames []string) error {
 func (m *MockStore) GetUserRoles(userID uint) ([]Role, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	user, ok := m.users[userID]
 	if !ok {
 		return nil, errors.New("user not found")
@@ -197,7 +199,7 @@ func (m *MockStore) GetUserRoles(userID uint) ([]Role, error) {
 func (m *MockStore) SetUserRoles(userID uint, roleNames []string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	user, ok := m.users[userID]
 	if !ok {
 		return errors.New("user not found")
@@ -288,7 +290,36 @@ func (m *MockStore) GetRoleByName(name string) (*Role, error) {
 }
 
 func (m *MockStore) GetAllRoles() ([]Role, error) {
-	return nil, nil
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var roles []Role
+	for _, r := range m.roles {
+		roles = append(roles, *r)
+	}
+	return roles, nil
+}
+
+func (m *MockStore) GetRoles(limit, offset int) ([]Role, int64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var roles []Role
+	for _, r := range m.roles {
+		roles = append(roles, *r)
+	}
+
+	total := int64(len(roles))
+
+	// Apply pagination
+	start := offset
+	if start > len(roles) {
+		return []Role{}, total, nil
+	}
+	end := start + limit
+	if end > len(roles) {
+		end = len(roles)
+	}
+
+	return roles[start:end], total, nil
 }
 
 func (m *MockStore) UpdateRole(r *Role) error {
@@ -415,23 +446,92 @@ func (m *MockStore) DeleteCustomEndpoint(id uint) error {
 }
 
 func (m *MockStore) DeleteCustomEndpointByPath(path string) error {
-    m.mu.Lock()
+	m.mu.Lock()
 	defer m.mu.Unlock()
 
-    id := -1
+	id := -1
 	for _, c := range m.customEndpoints {
 		if c.Path == path {
-            id = int(c.ID)
-            break
+			id = int(c.ID)
+			break
 		}
 	}
 
-    if id == -1 {
-        return errors.New("custom endpoint not found")
-    }
+	if id == -1 {
+		return errors.New("custom endpoint not found")
+	}
 
-    delete(m.customEndpoints, uint(id))
+	delete(m.customEndpoints, uint(id))
 
 	return nil
 }
 
+// RefreshToken methods
+func (m *MockStore) CreateRefreshToken(rt *RefreshToken) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if rt.ID == 0 {
+		rt.ID = m.allocateID()
+	}
+	m.refreshTokens[rt.Token] = rt
+	return nil
+}
+
+func (m *MockStore) GetRefreshToken(token string) (*RefreshToken, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	rt, ok := m.refreshTokens[token]
+	if !ok {
+		return nil, errors.New("refresh token not found")
+	}
+	return rt, nil
+}
+
+func (m *MockStore) ValidateRefreshToken(token string) (*RefreshToken, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	rt, ok := m.refreshTokens[token]
+	if !ok || rt.Revoked {
+		return nil, errors.New("invalid or revoked refresh token")
+	}
+	// Check if expired
+	now := int64(0) // In mock, we use 0 for current time logic
+	if rt.ExpiresAt < now {
+		return nil, errors.New("refresh token expired")
+	}
+	return rt, nil
+}
+
+func (m *MockStore) RevokeRefreshToken(token string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	rt, ok := m.refreshTokens[token]
+	if !ok {
+		return errors.New("refresh token not found")
+	}
+	rt.Revoked = true
+	return nil
+}
+
+func (m *MockStore) RevokeAllUserTokens(userID uint) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, rt := range m.refreshTokens {
+		if rt.UserID == userID {
+			rt.Revoked = true
+		}
+	}
+	return nil
+}
+
+func (m *MockStore) DeleteExpiredTokens() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	now := int64(0)
+	for token, rt := range m.refreshTokens {
+		if rt.ExpiresAt < now {
+			delete(m.refreshTokens, token)
+		}
+	}
+	return nil
+}

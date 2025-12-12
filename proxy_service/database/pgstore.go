@@ -44,7 +44,7 @@ func (s *PGStore) Init() error {
 	sqlDB.SetConnMaxLifetime(5 * time.Minute) // Connection lifetime
 
 	// Auto-migrate models.
-	if err := s.db.AutoMigrate(&User{}, &Role{}, &AccountingRule{}, &CustomEndpoint{}, Phone{}); err != nil {
+	if err := s.db.AutoMigrate(&User{}, &Role{}, &AccountingRule{}, &CustomEndpoint{}, &Phone{}, &RefreshToken{}); err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
 
@@ -57,7 +57,7 @@ func (s *PGStore) CreateUser(u *User) error {
 
 func (s *PGStore) GetUserByID(id uint) (*User, error) {
 	var u User
-	if err := s.db.First(&u, id).Error; err != nil {
+	if err := s.db.Preload("Roles").First(&u, id).Error; err != nil {
 		return nil, err
 	}
 	return &u, nil
@@ -65,7 +65,7 @@ func (s *PGStore) GetUserByID(id uint) (*User, error) {
 
 func (s *PGStore) GetUserByUsername(username string) (*User, error) {
 	var u User
-	if err := s.db.Where("username = ?", username).First(&u).Error; err != nil {
+	if err := s.db.Preload("Roles").Where("username = ?", username).First(&u).Error; err != nil {
 		return nil, err
 	}
 	return &u, nil
@@ -285,6 +285,23 @@ func (s *PGStore) GetAllRoles() ([]Role, error) {
 	return roles, nil
 }
 
+func (s *PGStore) GetRoles(limit, offset int) ([]Role, int64, error) {
+	var roles []Role
+	var total int64
+
+	// Get total count
+	if err := s.db.Model(&Role{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Get paginated results
+	if err := s.db.Limit(limit).Offset(offset).Find(&roles).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return roles, total, nil
+}
+
 func (s *PGStore) UpdateRole(r *Role) error {
 	return s.db.Save(r).Error
 }
@@ -359,4 +376,37 @@ func (s *PGStore) DeleteCustomEndpoint(id uint) error {
 func (s *PGStore) DeleteCustomEndpointByPath(path string) error {
     // permanently delete the row
 	return  s.db.Unscoped().Where("path = ?", path).Delete(&CustomEndpoint{}).Error
+}
+
+// RefreshToken methods
+func (s *PGStore) CreateRefreshToken(rt *RefreshToken) error {
+	return s.db.Create(rt).Error
+}
+
+func (s *PGStore) GetRefreshToken(token string) (*RefreshToken, error) {
+	var rt RefreshToken
+	if err := s.db.Where("token = ?", token).First(&rt).Error; err != nil {
+		return nil, err
+	}
+	return &rt, nil
+}
+
+func (s *PGStore) ValidateRefreshToken(token string) (*RefreshToken, error) {
+	var rt RefreshToken
+	if err := s.db.Where("token = ? AND revoked = ? AND expires_at > ?", token, false, time.Now().Unix()).First(&rt).Error; err != nil {
+		return nil, fmt.Errorf("Invalid or expired refresh token")
+	}
+	return &rt, nil
+}
+
+func (s *PGStore) RevokeRefreshToken(token string) error {
+	return s.db.Model(&RefreshToken{}).Where("token = ?", token).Update("revoked", true).Error
+}
+
+func (s *PGStore) RevokeAllUserTokens(userID uint) error {
+	return s.db.Model(&RefreshToken{}).Where("user_id = ?", userID).Update("revoked", true).Error
+}
+
+func (s *PGStore) DeleteExpiredTokens() error {
+	return s.db.Where("expires_at < ?", time.Now().Unix()).Delete(&RefreshToken{}).Error
 }

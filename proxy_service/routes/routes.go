@@ -121,6 +121,14 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	rootGroup.POST("/login", handlers.LoginHandler)
 	rootGroup.POST("/secure-login", handlers.SecureLoginHandler)
 
+	// Refresh token and logout endpoints
+	rootGroup.POST("/refresh", handlers.RefreshAccessTokenHandler)
+	rootGroup.POST("/logout", handlers.RevokeRefreshTokenHandler)
+	rootGroup.POST("/logout-all",
+		middleware.AuthMiddleware,
+		handlers.LogoutAllDevicesHandler,
+	)
+
 	rootGroup.GET("/admin",
 		middleware.AuthMiddleware,          // Ensure user is authenticated.
 		middleware.RoleMiddleware("admin"), // Ensure only admins can access.

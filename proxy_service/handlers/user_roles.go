@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 	"time"
 
 	"auth_service/constants"
@@ -42,25 +41,24 @@ type Role struct {
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param userID path uint true "User ID"
+// @Param username path string true "Username"
 // @Param request body UserRolesRequest true "Roles to set"
 // @Success 200 {object} UserRolesResponse
 // @Failure 400 {object} types.APIError "Invalid request"
 // @Failure 401 {object} types.APIError "Unauthorized"
 // @Failure 404 {object} types.APIError "User not found"
 // @Failure 500 {object} types.APIError "Server error"
-// @Router /admin/users/{userID}/roles [put]
+// @Router /admin/users/{username}/roles [put]
 func SetUserRoles(c *gin.Context) {
 	requestID, _ := c.Get("request_id")
 	log := logger.Get()
 
-	userIDStr := c.Param("userID")
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		log.Error("Invalid user ID", "user_id", userIDStr, "error", err.Error())
+	username := c.Param("username")
+	if username == "" {
+		log.Error("Missing username parameter", "error", "username is required")
 		c.JSON(http.StatusBadRequest, types.APIError{
 			Code:      constants.ErrorInvalidJSON,
-			Message:   "Invalid user ID format",
+			Message:   "Username is required",
 			Timestamp: time.Now().Unix(),
 			RequestID: requestID.(string),
 		})
@@ -80,9 +78,9 @@ func SetUserRoles(c *gin.Context) {
 	}
 
 	// Verify user exists
-	user, err := database.DB.GetUserByID(uint(userID))
+	user, err := database.DB.GetUserByUsername(username)
 	if err != nil {
-		log.Error("User not found", "user_id", userID, "error", err.Error())
+		log.Error("User not found", "username", username, "error", err.Error())
 		c.JSON(http.StatusNotFound, types.APIError{
 			Code:      constants.ErrorUserNotFound,
 			Message:   "User not found",
@@ -93,8 +91,8 @@ func SetUserRoles(c *gin.Context) {
 	}
 
 	// Set roles
-	if err := database.DB.SetUserRoles(uint(userID), req.Roles); err != nil {
-		log.Error("Failed to set user roles", "user_id", userID, "error", err.Error())
+	if err := database.DB.SetUserRoles(user.ID, req.Roles); err != nil {
+		log.Error("Failed to set user roles", "user_id", user.ID, "error", err.Error())
 		c.JSON(http.StatusInternalServerError, types.APIError{
 			Code:      constants.ErrorInternalServer,
 			Message:   "Failed to set user roles",
@@ -105,9 +103,9 @@ func SetUserRoles(c *gin.Context) {
 	}
 
 	// Get updated roles
-	roles, err := database.DB.GetUserRoles(uint(userID))
+	roles, err := database.DB.GetUserRoles(user.ID)
 	if err != nil {
-		log.Error("Failed to get user roles", "user_id", userID, "error", err.Error())
+		log.Error("Failed to get user roles", "user_id", user.ID, "error", err.Error())
 		c.JSON(http.StatusInternalServerError, types.APIError{
 			Code:      constants.ErrorInternalServer,
 			Message:   "Failed to get user roles",
@@ -127,11 +125,11 @@ func SetUserRoles(c *gin.Context) {
 		}
 	}
 
-	log.Info("User roles updated", "user_id", userID, "username", user.Username, "roles", req.Roles)
+	log.Info("User roles updated", "user_id", user.ID, "username", user.Username, "roles", req.Roles)
 
 	c.JSON(http.StatusOK, types.APISuccess{
 		Data: UserRolesResponse{
-			UserID: uint(userID),
+			UserID: user.ID,
 			Roles:  roleResponses,
 		},
 		Message:   "User roles updated successfully",
@@ -146,25 +144,24 @@ func SetUserRoles(c *gin.Context) {
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param userID path uint true "User ID"
+// @Param username path string true "Username"
 // @Param request body AddUserRolesRequest true "Roles to add"
 // @Success 200 {object} UserRolesResponse
 // @Failure 400 {object} types.APIError "Invalid request"
 // @Failure 401 {object} types.APIError "Unauthorized"
 // @Failure 404 {object} types.APIError "User not found"
 // @Failure 500 {object} types.APIError "Server error"
-// @Router /admin/users/{userID}/roles [post]
+// @Router /admin/users/{username}/roles [post]
 func AddUserRoles(c *gin.Context) {
 	requestID, _ := c.Get("request_id")
 	log := logger.Get()
 
-	userIDStr := c.Param("userID")
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		log.Error("Invalid user ID", "user_id", userIDStr, "error", err.Error())
+	username := c.Param("username")
+	if username == "" {
+		log.Error("Missing username parameter", "error", "username is required")
 		c.JSON(http.StatusBadRequest, types.APIError{
 			Code:      constants.ErrorInvalidJSON,
-			Message:   "Invalid user ID format",
+			Message:   "Username is required",
 			Timestamp: time.Now().Unix(),
 			RequestID: requestID.(string),
 		})
@@ -184,9 +181,9 @@ func AddUserRoles(c *gin.Context) {
 	}
 
 	// Verify user exists
-	user, err := database.DB.GetUserByID(uint(userID))
+	user, err := database.DB.GetUserByUsername(username)
 	if err != nil {
-		log.Error("User not found", "user_id", userID, "error", err.Error())
+		log.Error("User not found", "username", username, "error", err.Error())
 		c.JSON(http.StatusNotFound, types.APIError{
 			Code:      constants.ErrorUserNotFound,
 			Message:   "User not found",
@@ -197,8 +194,8 @@ func AddUserRoles(c *gin.Context) {
 	}
 
 	// Add roles
-	if err := database.DB.AddRolesToUser(uint(userID), req.Roles); err != nil {
-		log.Error("Failed to add roles to user", "user_id", userID, "error", err.Error())
+	if err := database.DB.AddRolesToUser(user.ID, req.Roles); err != nil {
+		log.Error("Failed to add roles to user", "user_id", user.ID, "error", err.Error())
 		c.JSON(http.StatusInternalServerError, types.APIError{
 			Code:      constants.ErrorInternalServer,
 			Message:   "Failed to add roles: " + err.Error(),
@@ -209,9 +206,9 @@ func AddUserRoles(c *gin.Context) {
 	}
 
 	// Get updated roles
-	roles, err := database.DB.GetUserRoles(uint(userID))
+	roles, err := database.DB.GetUserRoles(user.ID)
 	if err != nil {
-		log.Error("Failed to get user roles", "user_id", userID, "error", err.Error())
+		log.Error("Failed to get user roles", "user_id", user.ID, "error", err.Error())
 		c.JSON(http.StatusInternalServerError, types.APIError{
 			Code:      constants.ErrorInternalServer,
 			Message:   "Failed to get user roles",
@@ -231,11 +228,11 @@ func AddUserRoles(c *gin.Context) {
 		}
 	}
 
-	log.Info("Roles added to user", "user_id", userID, "username", user.Username, "new_roles", req.Roles)
+	log.Info("Roles added to user", "user_id", user.ID, "username", user.Username, "new_roles", req.Roles)
 
 	c.JSON(http.StatusOK, types.APISuccess{
 		Data: UserRolesResponse{
-			UserID: uint(userID),
+			UserID: user.ID,
 			Roles:  roleResponses,
 		},
 		Message:   "Roles added successfully",
@@ -250,25 +247,24 @@ func AddUserRoles(c *gin.Context) {
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param userID path uint true "User ID"
+// @Param username path string true "Username"
 // @Param request body AddUserRolesRequest true "Roles to remove"
 // @Success 200 {object} UserRolesResponse
 // @Failure 400 {object} types.APIError "Invalid request"
 // @Failure 401 {object} types.APIError "Unauthorized"
 // @Failure 404 {object} types.APIError "User not found"
 // @Failure 500 {object} types.APIError "Server error"
-// @Router /admin/users/{userID}/roles [delete]
+// @Router /admin/users/{username}/roles [delete]
 func RemoveUserRoles(c *gin.Context) {
 	requestID, _ := c.Get("request_id")
 	log := logger.Get()
 
-	userIDStr := c.Param("userID")
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		log.Error("Invalid user ID", "user_id", userIDStr, "error", err.Error())
+	username := c.Param("username")
+	if username == "" {
+		log.Error("Missing username parameter", "error", "username is required")
 		c.JSON(http.StatusBadRequest, types.APIError{
 			Code:      constants.ErrorInvalidJSON,
-			Message:   "Invalid user ID format",
+			Message:   "Username is required",
 			Timestamp: time.Now().Unix(),
 			RequestID: requestID.(string),
 		})
@@ -288,9 +284,9 @@ func RemoveUserRoles(c *gin.Context) {
 	}
 
 	// Verify user exists
-	user, err := database.DB.GetUserByID(uint(userID))
+	user, err := database.DB.GetUserByUsername(username)
 	if err != nil {
-		log.Error("User not found", "user_id", userID, "error", err.Error())
+		log.Error("User not found", "username", username, "error", err.Error())
 		c.JSON(http.StatusNotFound, types.APIError{
 			Code:      constants.ErrorUserNotFound,
 			Message:   "User not found",
@@ -301,8 +297,8 @@ func RemoveUserRoles(c *gin.Context) {
 	}
 
 	// Remove roles
-	if err := database.DB.RemoveRolesFromUser(uint(userID), req.Roles); err != nil {
-		log.Error("Failed to remove roles from user", "user_id", userID, "error", err.Error())
+	if err := database.DB.RemoveRolesFromUser(user.ID, req.Roles); err != nil {
+		log.Error("Failed to remove roles from user", "user_id", user.ID, "error", err.Error())
 		c.JSON(http.StatusInternalServerError, types.APIError{
 			Code:      constants.ErrorInternalServer,
 			Message:   "Failed to remove roles: " + err.Error(),
@@ -313,9 +309,9 @@ func RemoveUserRoles(c *gin.Context) {
 	}
 
 	// Get updated roles
-	roles, err := database.DB.GetUserRoles(uint(userID))
+	roles, err := database.DB.GetUserRoles(user.ID)
 	if err != nil {
-		log.Error("Failed to get user roles", "user_id", userID, "error", err.Error())
+		log.Error("Failed to get user roles", "user_id", user.ID, "error", err.Error())
 		c.JSON(http.StatusInternalServerError, types.APIError{
 			Code:      constants.ErrorInternalServer,
 			Message:   "Failed to get user roles",
@@ -335,11 +331,11 @@ func RemoveUserRoles(c *gin.Context) {
 		}
 	}
 
-	log.Info("Roles removed from user", "user_id", userID, "username", user.Username, "removed_roles", req.Roles)
+	log.Info("Roles removed from user", "user_id", user.ID, "username", user.Username, "removed_roles", req.Roles)
 
 	c.JSON(http.StatusOK, types.APISuccess{
 		Data: UserRolesResponse{
-			UserID: uint(userID),
+			UserID: user.ID,
 			Roles:  roleResponses,
 		},
 		Message:   "Roles removed successfully",
@@ -353,23 +349,22 @@ func RemoveUserRoles(c *gin.Context) {
 // @Description Get all roles assigned to a user
 // @Tags Users
 // @Produce json
-// @Param userID path uint true "User ID"
+// @Param username path string true "Username"
 // @Success 200 {object} UserRolesResponse
 // @Failure 401 {object} types.APIError "Unauthorized"
 // @Failure 404 {object} types.APIError "User not found"
 // @Failure 500 {object} types.APIError "Server error"
-// @Router /admin/users/{userID}/roles [get]
+// @Router /admin/users/{username}/roles [get]
 func GetUserRoles(c *gin.Context) {
 	requestID, _ := c.Get("request_id")
 	log := logger.Get()
 
-	userIDStr := c.Param("userID")
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		log.Error("Invalid user ID", "user_id", userIDStr, "error", err.Error())
+	username := c.Param("username")
+	if username == "" {
+		log.Error("Missing username parameter", "error", "username is required")
 		c.JSON(http.StatusBadRequest, types.APIError{
 			Code:      constants.ErrorInvalidJSON,
-			Message:   "Invalid user ID format",
+			Message:   "Username is required",
 			Timestamp: time.Now().Unix(),
 			RequestID: requestID.(string),
 		})
@@ -377,9 +372,9 @@ func GetUserRoles(c *gin.Context) {
 	}
 
 	// Verify user exists
-	user, err := database.DB.GetUserByID(uint(userID))
+	user, err := database.DB.GetUserByUsername(username)
 	if err != nil {
-		log.Error("User not found", "user_id", userID, "error", err.Error())
+		log.Error("User not found", "username", username, "error", err.Error())
 		c.JSON(http.StatusNotFound, types.APIError{
 			Code:      constants.ErrorUserNotFound,
 			Message:   "User not found",
@@ -390,9 +385,9 @@ func GetUserRoles(c *gin.Context) {
 	}
 
 	// Get roles
-	roles, err := database.DB.GetUserRoles(uint(userID))
+	roles, err := database.DB.GetUserRoles(user.ID)
 	if err != nil {
-		log.Error("Failed to get user roles", "user_id", userID, "error", err.Error())
+		log.Error("Failed to get user roles", "user_id", user.ID, "error", err.Error())
 		c.JSON(http.StatusInternalServerError, types.APIError{
 			Code:      constants.ErrorInternalServer,
 			Message:   "Failed to get user roles",
@@ -412,11 +407,11 @@ func GetUserRoles(c *gin.Context) {
 		}
 	}
 
-	log.Info("Retrieved user roles", "user_id", userID, "username", user.Username)
+	log.Info("Retrieved user roles", "user_id", user.ID, "username", user.Username)
 
 	c.JSON(http.StatusOK, types.APISuccess{
 		Data: UserRolesResponse{
-			UserID: uint(userID),
+			UserID: user.ID,
 			Roles:  roleResponses,
 		},
 		Message:   "User roles retrieved successfully",

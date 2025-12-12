@@ -82,6 +82,8 @@ func ErrorStatusCode(errorCode string) int {
 		"INVALID_JSON":              http.StatusBadRequest,
 		"INVALID_PATH":              http.StatusBadRequest,
 		"RATE_LIMIT_EXCEEDED":       http.StatusTooManyRequests,
+		"INVALID_REFRESH_TOKEN":     http.StatusUnauthorized,
+		"REFRESH_TOKEN_EXPIRED":     http.StatusUnauthorized,
 	}
 	if status, ok := statusMap[errorCode]; ok {
 		return status

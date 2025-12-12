@@ -22,6 +22,8 @@ const (
 	ErrorInvalidJSON        = "INVALID_JSON"
 	ErrorInvalidPathTravers = "INVALID_PATH"
 	ErrorRateLimitExceeded  = "RATE_LIMIT_EXCEEDED"
+	ErrorInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
+	ErrorRefreshTokenExpired = "REFRESH_TOKEN_EXPIRED"
 )
 
 // Password validation constraints

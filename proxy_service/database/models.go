@@ -7,17 +7,19 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string  `gorm:"uniqueIndex"`
-	Password string
-	Roles    []Role  `gorm:"many2many:user_roles;"` // Many-to-many relationship with roles
-	Balance  float64 `gorm:"default:0"`
+	Username  string  `gorm:"uniqueIndex"`
+	Password  string
+	Roles     []Role  `gorm:"many2many:user_roles;"` // Many-to-many relationship with roles
+	Balance   float64 `gorm:"default:0"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type Role struct {
 	gorm.Model
-	Name        string `gorm:"uniqueIndex;not null"`
+	Name      string `gorm:"uniqueIndex;not null"`
 	Description string
-	Users       []User `gorm:"many2many:user_roles;"` // Many-to-many relationship with users
+	Users     []User `gorm:"many2many:user_roles;"` // Many-to-many relationship with users
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type AccountingRule struct {
@@ -39,4 +41,14 @@ type Phone struct {
   gorm.Model
   Number string `gorm:"not null"`
   UserID uint   `gorm:"index;not null"`
+}
+
+// RefreshToken stores refresh tokens for users
+type RefreshToken struct {
+	gorm.Model
+	UserID    uint      `gorm:"index;not null"` // Foreign key to User
+	Token     string    `gorm:"uniqueIndex;not null"` // The refresh token itself
+	ExpiresAt int64     `gorm:"index;not null"` // Unix timestamp when token expires
+	Revoked   bool      `gorm:"default:false"`  // For token revocation
+	User      User      `gorm:"foreignKey:UserID"`
 }
