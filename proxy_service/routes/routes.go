@@ -4,8 +4,9 @@ import (
 	"auth_service/config"
 	"auth_service/handlers"
 	"auth_service/middleware"
-
 	"log"
+	"time"
+
 	"net/http"
 
 	"github.com/gin-contrib/cors"
@@ -51,6 +52,11 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// httpsRouter.RedirectTrailingSlash = false
 	// httpsRouter.RemoveExtraSlash = true
 
+	// Global middleware
+	httpsRouter.Use(middleware.RequestIDMiddleware)          // Add request ID for tracing
+	httpsRouter.Use(middleware.SecurityHeadersMiddleware)    // Add security headers
+	httpsRouter.Use(middleware.RateLimitMiddleware(100, 60*time.Second)) // Rate limit: 100 req/min
+
 	// Enable CORS for frontend requests using configured origins.
 	corsConfig := cors.Config{
 		AllowOrigins:     config.AllowedCORSOrigins,
@@ -63,6 +69,10 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 
 	httpsRouter.Use(cors.New(corsConfig))
 	// httpRouter.Use(cors.New(corsConfig))
+
+	// Health check and info endpoints (no auth required)
+	httpsRouter.GET("/health", handlers.HealthHandler)
+	httpsRouter.GET("/version", handlers.VersionHandler)
 
 	// Create a separate group for captcha endpoints with explicit CORS
 	captchaGroup := httpsRouter.Group(config.BaseApi + "/captcha")

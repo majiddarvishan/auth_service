@@ -5,7 +5,10 @@ import (
 	"time"
 
 	"auth_service/config"
+	"auth_service/constants"
 	"auth_service/database"
+	"auth_service/types"
+	"auth_service/validation"
 
 	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
@@ -39,44 +42,86 @@ type RegisterRequest struct {
 func RegisterHandler(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
+		status := http.StatusBadRequest
+		requestID, _ := c.Get("request_id")
+		c.JSON(status, types.APIError{
+			Code:      constants.ErrorInvalidJSON,
+			Message:   "Invalid JSON format",
+			Timestamp: time.Now().Unix(),
+			RequestID: requestID.(string),
+		})
 		return
 	}
 
 	if req.Username == "" || req.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username and password are required"})
+		status := http.StatusBadRequest
+		requestID, _ := c.Get("request_id")
+		c.JSON(status, types.APIError{
+			Code:      constants.ErrorInvalidUsername,
+			Message:   "Username and password are required",
+			Timestamp: time.Now().Unix(),
+			RequestID: requestID.(string),
+		})
+		return
+	}
+
+	// Validate username format
+	if err := validation.ValidateUsername(req.Username); err != nil {
+		status := http.StatusBadRequest
+		requestID, _ := c.Get("request_id")
+		c.JSON(status, types.APIError{
+			Code:      constants.ErrorInvalidUsername,
+			Message:   err.Error(),
+			Timestamp: time.Now().Unix(),
+			RequestID: requestID.(string),
+		})
 		return
 	}
 
 	// Validate password strength
-	if len(req.Password) < 8 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Password must be at least 8 characters long"})
-		return
-	}
-
-	// Validate username length
-	if len(req.Username) < 3 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username must be at least 3 characters long"})
+	if err := validation.ValidatePasswordStrength(req.Password); err != nil {
+		status := http.StatusBadRequest
+		requestID, _ := c.Get("request_id")
+		c.JSON(status, types.APIError{
+			Code:      constants.ErrorInvalidPassword2,
+			Message:   err.Error(),
+			Timestamp: time.Now().Unix(),
+			RequestID: requestID.(string),
+		})
 		return
 	}
 
 	// Hash the password.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 14)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not hash password"})
+		status := http.StatusInternalServerError
+		requestID, _ := c.Get("request_id")
+		c.JSON(status, types.APIError{
+			Code:      constants.ErrorInternalServer,
+			Message:   "Could not hash password",
+			Timestamp: time.Now().Unix(),
+			RequestID: requestID.(string),
+		})
 		return
 	}
 
 	// Use provided role or assign a default role.
 	roleName := req.Role
 	if roleName == "" {
-		roleName = "guest"
+		roleName = constants.DefaultRole
 	}
 
 	// Look up the role in the database.
 	role, err := database.DB.GetRoleByName(roleName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Role not found"})
+		status := http.StatusBadRequest
+		requestID, _ := c.Get("request_id")
+		c.JSON(status, types.APIError{
+			Code:      constants.ErrorRoleNotFound,
+			Message:   "Role not found",
+			Timestamp: time.Now().Unix(),
+			RequestID: requestID.(string),
+		})
 		return
 	}
 

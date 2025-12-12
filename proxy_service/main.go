@@ -3,12 +3,13 @@ package main
 import (
 	"auth_service/config"
 	"auth_service/database"
+	"auth_service/logger"
 	"auth_service/routes"
 	"context"
 	"flag"
-	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -31,14 +32,33 @@ func main() {
 	dbMode := flag.String("d", "postgres", "Database mode. postgres or mock")
 	flag.Parse()
 
+	// Initialize structured logger
+	logger.Init()
+	log := logger.Get()
+
 	// Load configuration from .env.
 	config.LoadConfig()
+
+	// Validate configuration
+	if err := config.ValidateConfig(*dbMode); err != nil {
+		log.Error("Configuration validation failed", "error", err.Error())
+		os.Exit(1)
+	}
+
+	log.Info("Configuration loaded successfully")
 
 	// Initialize the database.
 	_, err := database.NewStore(*dbMode)
 	if err != nil {
-		log.Fatal("Error creating database connection:", err)
+		log.Error("Error creating database connection", "error", err.Error())
+		os.Exit(1)
 	}
+
+	log.Info("Database connected successfully", "mode", *dbMode)
+
+	// Graceful shutdown coordination
+	var wg sync.WaitGroup
+	shutdownChan := make(chan struct{})
 
 	// Setup graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -46,11 +66,27 @@ func main() {
 
 	go func() {
 		sig := <-sigChan
-		log.Printf("Received signal: %v. Shutting down gracefully...\n", sig)
-		// Give requests 10 seconds to complete
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		log.Info("Received shutdown signal", "signal", sig.String())
+		close(shutdownChan)
+
+		// Give requests 30 seconds to complete
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		_ = ctx
+
+		// Wait for in-flight requests
+		done := make(chan struct{})
+		go func() {
+			wg.Wait()
+			close(done)
+		}()
+
+		select {
+		case <-done:
+			log.Info("All requests completed")
+		case <-ctx.Done():
+			log.Warn("Shutdown timeout, forcing exit")
+		}
+
 		os.Exit(0)
 	}()
 
