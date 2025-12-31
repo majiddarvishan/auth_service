@@ -1,0 +1,42 @@
+services:
+  auth_proxy:
+    container_name: auth_proxy
+    image: auth_proxy:1.0.0
+    privileged: true
+    restart: on-failure
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - ./tls:/etc/tls:ro
+    environment:
+      - GIN_MODE=release
+      - BASE_API=/v1/api
+      - TLS_PATH=/etc/tls
+      - SECRET_KEY=f78973efc0c0664995e2bb055bb2cac6779597a5294685f069229c909358f54a
+      - TOKEN_EXPIRATION_PERIOD=24h
+      - ACCOUNTING_ENDPOINT=http://192.168.1.186:8082
+      - DB_HOST=192.168.1.186
+      - DB_PORT=5432
+      - DB_USER_NAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=proxy_db
+    ports:
+      - 8443:8443
+
+  postgres:
+    image: postgres:17.4
+    restart: always
+    container_name: proxy_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: proxy_db
+    ports:
+      - 5432:5432
+    volumes:
+       - /etc/localtime:/etc/localtime:ro
+       - ./postgres_data:/var/lib/postgresql/data
+
+volumes:
+  output_data: {}
+  postgres_data:

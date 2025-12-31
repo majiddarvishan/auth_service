@@ -1,3 +1,4 @@
 web-service.code-workspace
 proxy_service/deployments/tls/
+proxy_service/deployments/postgres_data/
 .vscode/
