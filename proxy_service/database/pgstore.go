@@ -4,7 +4,6 @@ import (
 	"auth_service/config"
 	"fmt"
 	"log"
-	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -24,7 +23,7 @@ func (s *PGStore) Init() error {
 	var err error
 
 	// Construct the connection string
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=UTC",
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable  TimeZone=UTC",
 		config.DatabaseHost, config.DatabasePort, config.DatabaseUserName, config.DatabasePassword, config.DatabaseName)
 
 	s.db, err = gorm.Open(postgres.Open(connStr), &gorm.Config{})
@@ -32,19 +31,8 @@ func (s *PGStore) Init() error {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Configure connection pooling
-	sqlDB, err := s.db.DB()
-	if err != nil {
-		log.Fatal("Failed to get database instance:", err)
-	}
-
-	// Set connection pool parameters for better performance
-	sqlDB.SetMaxOpenConns(25)           // Max open connections
-	sqlDB.SetMaxIdleConns(5)            // Max idle connections
-	sqlDB.SetConnMaxLifetime(5 * time.Minute) // Connection lifetime
-
 	// Auto-migrate models.
-	if err := s.db.AutoMigrate(&User{}, &Role{}, &AccountingRule{}, &CustomEndpoint{}, &Phone{}, &RefreshToken{}); err != nil {
+	if err := s.db.AutoMigrate(&User{}, &Role{}, &AccountingRule{}, &CustomEndpoint{}, Phone{}); err != nil {
 		log.Fatal("Failed to auto migrate database:", err)
 	}
 
@@ -57,7 +45,7 @@ func (s *PGStore) CreateUser(u *User) error {
 
 func (s *PGStore) GetUserByID(id uint) (*User, error) {
 	var u User
-	if err := s.db.Preload("Roles").First(&u, id).Error; err != nil {
+	if err := s.db.First(&u, id).Error; err != nil {
 		return nil, err
 	}
 	return &u, nil
@@ -65,7 +53,7 @@ func (s *PGStore) GetUserByID(id uint) (*User, error) {
 
 func (s *PGStore) GetUserByUsername(username string) (*User, error) {
 	var u User
-	if err := s.db.Preload("Roles").Where("username = ?", username).First(&u).Error; err != nil {
+	if err := s.db.Where("username = ?", username).First(&u).Error; err != nil {
 		return nil, err
 	}
 	return &u, nil
@@ -74,7 +62,7 @@ func (s *PGStore) GetUserByUsername(username string) (*User, error) {
 func (s *PGStore) GetUserAndRoleByUsername(username string) (*User, error) {
 	var u User
 	if err := s.db.
-		Preload("Roles").
+		Preload("Role").
 		Where("username = ?", username).
 		First(&u).Error; err != nil {
 		return nil, fmt.Errorf("User not found")
@@ -96,87 +84,21 @@ func (s *PGStore) UpdateUserRoleByUsername(username, roleName string) error {
 		return fmt.Errorf("Role not found")
 	}
 
-	// Replace all roles with this single role
-	return s.db.Model(&user).Association("Roles").Replace([]Role{role})
-}
+	// Update the user's role.
+	user.RoleID = role.ID
 
-// AddRolesToUser adds one or more roles to a user
-func (s *PGStore) AddRolesToUser(userID uint, roleNames []string) error {
-	// Find user
-	var user User
-	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
-		return fmt.Errorf("User not found")
+	if err := s.db.Save(&user).Error; err != nil {
+		return err
 	}
 
-	// Find roles
-	var roles []Role
-	if err := s.db.Where("name IN ?", roleNames).Find(&roles).Error; err != nil {
-		return fmt.Errorf("Could not find roles")
-	}
-
-	if len(roles) == 0 {
-		return fmt.Errorf("No valid roles found")
-	}
-
-	// Add roles to user (many-to-many)
-	return s.db.Model(&user).Association("Roles").Append(roles)
-}
-
-// RemoveRolesFromUser removes one or more roles from a user
-func (s *PGStore) RemoveRolesFromUser(userID uint, roleNames []string) error {
-	// Find user
-	var user User
-	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
-		return fmt.Errorf("User not found")
-	}
-
-	// Find roles
-	var roles []Role
-	if err := s.db.Where("name IN ?", roleNames).Find(&roles).Error; err != nil {
-		return fmt.Errorf("Could not find roles")
-	}
-
-	// Remove roles from user
-	return s.db.Model(&user).Association("Roles").Delete(roles)
-}
-
-// GetUserRoles returns all roles for a user
-func (s *PGStore) GetUserRoles(userID uint) ([]Role, error) {
-	var user User
-	if err := s.db.Preload("Roles").Where("id = ?", userID).First(&user).Error; err != nil {
-		return nil, fmt.Errorf("User not found")
-	}
-
-	return user.Roles, nil
-}
-
-// SetUserRoles replaces all user roles with the given ones
-func (s *PGStore) SetUserRoles(userID uint, roleNames []string) error {
-	// Find user
-	var user User
-	if err := s.db.Where("id = ?", userID).First(&user).Error; err != nil {
-		return fmt.Errorf("User not found")
-	}
-
-	// Find roles
-	var roles []Role
-	if err := s.db.Where("name IN ?", roleNames).Find(&roles).Error; err != nil {
-		return fmt.Errorf("Could not find roles")
-	}
-
-	if len(roles) == 0 {
-		return fmt.Errorf("No valid roles found")
-	}
-
-	// Replace all roles
-	return s.db.Model(&user).Association("Roles").Replace(roles)
+	return nil
 }
 
 func (s *PGStore) GetAllUsers() ([]User, error) {
 	//  Load users and their Roles
 	var users []User
 	if err := s.db.
-		Preload("Roles").
+		Preload("Role").
 		Find(&users).Error; err != nil {
 		return nil, fmt.Errorf("Failed to retrieve users")
 	}
@@ -204,13 +126,15 @@ func (s *PGStore) DeleteUserByUsername(username string) error {
 		return err
 	}
 
-	// Permanently delete the user to clear the unique constraint.
-	// if err := database.DB.Unscoped().Delete(&user).Error; err != nil {
-	//     c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
-	//     return
-	// }
-
 	return nil
+}
+
+func (s *PGStore) PermanentlyDeleteUser(id uint) error {
+	return s.db.Unscoped().Delete(&User{}, id).Error
+}
+
+func (s *PGStore) RestoreUser(id uint) error {
+	return s.db.Model(&User{}).Where("id = ?", id).Update("deleted_at", nil).Error
 }
 
 func (s *PGStore) GetUserPhones(userName string) ([]string, error) {
@@ -285,29 +209,20 @@ func (s *PGStore) GetAllRoles() ([]Role, error) {
 	return roles, nil
 }
 
-func (s *PGStore) GetRoles(limit, offset int) ([]Role, int64, error) {
-	var roles []Role
-	var total int64
-
-	// Get total count
-	if err := s.db.Model(&Role{}).Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
-	// Get paginated results
-	if err := s.db.Limit(limit).Offset(offset).Find(&roles).Error; err != nil {
-		return nil, 0, err
-	}
-
-	return roles, total, nil
-}
-
 func (s *PGStore) UpdateRole(r *Role) error {
 	return s.db.Save(r).Error
 }
 
 func (s *PGStore) DeleteRole(id uint) error {
 	return s.db.Delete(&Role{}, id).Error
+}
+
+func (s *PGStore) PermanentlyDeleteRole(id uint) error {
+	return s.db.Unscoped().Delete(&Role{}, id).Error
+}
+
+func (s *PGStore) RestoreRole(id uint) error {
+	return s.db.Model(&Role{}).Where("id = ?", id).Update("deleted_at", nil).Error
 }
 
 // AccountingRule
@@ -374,39 +289,6 @@ func (s *PGStore) DeleteCustomEndpoint(id uint) error {
 }
 
 func (s *PGStore) DeleteCustomEndpointByPath(path string) error {
-    // permanently delete the row
-	return  s.db.Unscoped().Where("path = ?", path).Delete(&CustomEndpoint{}).Error
-}
-
-// RefreshToken methods
-func (s *PGStore) CreateRefreshToken(rt *RefreshToken) error {
-	return s.db.Create(rt).Error
-}
-
-func (s *PGStore) GetRefreshToken(token string) (*RefreshToken, error) {
-	var rt RefreshToken
-	if err := s.db.Where("token = ?", token).First(&rt).Error; err != nil {
-		return nil, err
-	}
-	return &rt, nil
-}
-
-func (s *PGStore) ValidateRefreshToken(token string) (*RefreshToken, error) {
-	var rt RefreshToken
-	if err := s.db.Where("token = ? AND revoked = ? AND expires_at > ?", token, false, time.Now().Unix()).First(&rt).Error; err != nil {
-		return nil, fmt.Errorf("Invalid or expired refresh token")
-	}
-	return &rt, nil
-}
-
-func (s *PGStore) RevokeRefreshToken(token string) error {
-	return s.db.Model(&RefreshToken{}).Where("token = ?", token).Update("revoked", true).Error
-}
-
-func (s *PGStore) RevokeAllUserTokens(userID uint) error {
-	return s.db.Model(&RefreshToken{}).Where("user_id = ?", userID).Update("revoked", true).Error
-}
-
-func (s *PGStore) DeleteExpiredTokens() error {
-	return s.db.Where("expires_at < ?", time.Now().Unix()).Delete(&RefreshToken{}).Error
+	// permanently delete the row
+	return s.db.Unscoped().Where("path = ?", path).Delete(&CustomEndpoint{}).Error
 }

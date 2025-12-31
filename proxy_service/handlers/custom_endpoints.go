@@ -1,16 +1,13 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
-	"time"
+	"strings"
 
-	"auth_service/constants"
 	"auth_service/database"
-	"auth_service/logger"
 	"auth_service/middleware"
 	"auth_service/proxy"
-	"auth_service/types"
-	"auth_service/validation"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,14 +38,14 @@ func registerCustomEndpointDynamic(r *gin.RouterGroup, ep *database.CustomEndpoi
 	default:
 		r.Any(ep.Path, handlersChain...)
 	}
-	logger.Info("Registered dynamic route", "path", ep.Path, "method", ep.Method, "target", ep.Endpoints[0])
+	log.Printf("Registered dynamic route: %s [%s] -> %s", ep.Path, ep.Method, ep.Endpoints[0])
 }
 
 // func RegisterCustomEndpoints(r *gin.Engine) {
 func RegisterCustomEndpoints(routerGroup *gin.RouterGroup) {
 	endpoints, err := database.DB.GetAllCustomEndpoints()
 	if err != nil {
-		logger.Error("Error fetching custom endpoints", "error", err.Error())
+		log.Println("Error fetching custom endpoints:", err)
 		return
 	}
 
@@ -86,80 +83,36 @@ type SwaggerCustomEndpoint struct {
 func CreateCustomEndpointHandler(dynamicGroup *gin.RouterGroup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req database.CustomEndpoint
-		requestID, _ := c.Get("request_id")
-
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, types.APIError{
-				Code:      constants.ErrorInvalidJSON,
-				Message:   "Invalid JSON payload",
-				Timestamp: time.Now().Unix(),
-				RequestID: requestID.(string),
-			})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON payload"})
 			return
 		}
 
-		// Validate path
-		if err := validation.ValidateEndpointPath(req.Path); err != nil {
-			c.JSON(http.StatusBadRequest, types.APIError{
-				Code:      constants.ErrorInvalidPathTravers,
-				Message:   err.Error(),
-				Timestamp: time.Now().Unix(),
-				RequestID: requestID.(string),
-			})
-			return
-		}
-
-		// Validate targets
-		if err := validation.ValidateEndpointTargets(req.Endpoints); err != nil {
-			c.JSON(http.StatusBadRequest, types.APIError{
-				Code:      "INVALID_ENDPOINTS",
-				Message:   err.Error(),
-				Timestamp: time.Now().Unix(),
-				RequestID: requestID.(string),
-			})
-			return
-		}
-
-		// Validate HTTP method if provided
-		if req.Method != "" && req.Method != "ANY" {
-			if err := validation.ValidateHTTPMethod(req.Method); err != nil {
-				c.JSON(http.StatusBadRequest, types.APIError{
-					Code:      "INVALID_METHOD",
-					Message:   err.Error(),
-					Timestamp: time.Now().Unix(),
-					RequestID: requestID.(string),
-				})
+		// Validate endpoints format
+		for _, endpoint := range req.Endpoints {
+			if endpoint == "" || !strings.HasPrefix(endpoint, "http") {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing endpoint URL"})
 				return
 			}
-
-			if req.Method == "" {
-				req.Method = "ANY"
-			}
-
-			req.Path += "/*path"
-			req.Enabled = true
-
-			if err := database.DB.CreateCustomEndpoint(&req); err != nil {
-				c.JSON(http.StatusInternalServerError, types.APIError{
-					Code:      constants.ErrorInternalServer,
-					Message:   "Failed to create custom endpoint",
-					Timestamp: time.Now().Unix(),
-					RequestID: requestID.(string),
-				})
-				return
-			}
-
-			c.JSON(http.StatusOK, types.APISuccess{
-				Message:   "Custom endpoint created successfully",
-				Data:      req,
-				Timestamp: time.Now().Unix(),
-				RequestID: requestID.(string),
-			})
-
-			registerCustomEndpointDynamic(dynamicGroup, &req)
-
-			c.Next()
 		}
+
+		if req.Method == "" {
+			req.Method = "ANY"
+		}
+
+		req.Path += "/*path"
+		req.Enabled = true
+
+		if err := database.DB.CreateCustomEndpoint(&req); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create custom endpoint"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Custom endpoint created successfully", "endpoint": req})
+
+		registerCustomEndpointDynamic(dynamicGroup, &req)
+
+		c.Next()
 	}
 }
 

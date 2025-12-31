@@ -5,11 +5,7 @@ import (
 	"time"
 
 	"auth_service/config"
-	"auth_service/constants"
 	"auth_service/database"
-	"auth_service/logger"
-	"auth_service/types"
-	"auth_service/validation"
 
 	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
@@ -43,93 +39,39 @@ type RegisterRequest struct {
 func RegisterHandler(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		status := http.StatusBadRequest
-		requestID, _ := c.Get("request_id")
-		c.JSON(status, types.APIError{
-			Code:      constants.ErrorInvalidJSON,
-			Message:   "Invalid JSON format",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
 		return
 	}
 
 	if req.Username == "" || req.Password == "" {
-		status := http.StatusBadRequest
-		requestID, _ := c.Get("request_id")
-		c.JSON(status, types.APIError{
-			Code:      constants.ErrorInvalidUsername,
-			Message:   "Username and password are required",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
-		return
-	}
-
-	// Validate username format
-	if err := validation.ValidateUsername(req.Username); err != nil {
-		status := http.StatusBadRequest
-		requestID, _ := c.Get("request_id")
-		c.JSON(status, types.APIError{
-			Code:      constants.ErrorInvalidUsername,
-			Message:   err.Error(),
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
-		return
-	}
-
-	// Validate password strength
-	if err := validation.ValidatePasswordStrength(req.Password); err != nil {
-		status := http.StatusBadRequest
-		requestID, _ := c.Get("request_id")
-		c.JSON(status, types.APIError{
-			Code:      constants.ErrorInvalidPassword2,
-			Message:   err.Error(),
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username and password are required"})
 		return
 	}
 
 	// Hash the password.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 14)
 	if err != nil {
-		status := http.StatusInternalServerError
-		requestID, _ := c.Get("request_id")
-		c.JSON(status, types.APIError{
-			Code:      constants.ErrorInternalServer,
-			Message:   "Could not hash password",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not hash password"})
 		return
 	}
 
 	// Use provided role or assign a default role.
 	roleName := req.Role
 	if roleName == "" {
-		roleName = constants.DefaultRole
+		roleName = "guest"
 	}
 
 	// Look up the role in the database.
 	role, err := database.DB.GetRoleByName(roleName)
 	if err != nil {
-		status := http.StatusBadRequest
-		requestID, _ := c.Get("request_id")
-		c.JSON(status, types.APIError{
-			Code:      constants.ErrorRoleNotFound,
-			Message:   "Role not found",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Role not found"})
 		return
 	}
 
 	user := database.User{
 		Username: req.Username,
 		Password: string(hashedPassword),
-		Roles:    []database.Role{*role},
+		RoleID:   role.ID,
 	}
 
 	// // Use provided role or assign a default role.
@@ -161,97 +103,58 @@ func RegisterHandler(c *gin.Context) {
 // @Property captchaId body string true  "ID of the captcha challenge"
 // @Property captchaSolution body string true  "Solution to the captcha"
 type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username        string `json:"username"`
+	Password        string `json:"password"`
 }
 
-// LoginHandler authenticates the user and returns a JWT token with refresh token.
+// LoginHandler authenticates the user and returns a JWT token.
 // @Summary      Login a user
-// @Description  Authenticate user credentials and return a signed JWT with refresh token
+// @Description  Authenticate user credentials and return a signed JWT
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
 // @Param        request  body      LoginRequest  true  "Login payload"
-// @Success      200      {object}  types.TokenResponse  "JWT token with refresh token"
-// @Failure      400      {object}  types.APIError "Invalid JSON format"
-// @Failure      401      {object}  types.APIError "Unauthorized: invalid credentials"
-// @Failure      500      {object}  types.APIError "Server error during token generation"
+// @Success      200      {object}  map[string]string  "JWT token"
+// @Failure      400      {object}  map[string]string  "Invalid JSON format"
+// @Failure      401      {object}  map[string]string  "Unauthorized: invalid credentials"
+// @Failure      500      {object}  map[string]string  "Server error during token generation"
 // @Router       /login [post]
 func LoginHandler(c *gin.Context) {
-	requestID, _ := c.Get("request_id")
-	log := logger.Get()
-
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Error("Invalid login request", "error", err.Error())
-		c.JSON(http.StatusBadRequest, types.APIError{
-			Code:      constants.ErrorInvalidJSON,
-			Message:   "Invalid JSON format",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
 		return
 	}
 
 	// Fetch user and its Role in one go:
 	user, err := database.DB.GetUserAndRoleByUsername(req.Username)
 	if err != nil {
-		log.Error("User not found during login", "username", req.Username, "error", err.Error())
-		c.JSON(http.StatusUnauthorized, types.APIError{
-			Code:      constants.ErrorInvalidPassword,
-			Message:   "Invalid username or password",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Compare the stored hashed password with the incoming password.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		log.Error("Invalid password during login", "username", req.Username)
-		c.JSON(http.StatusUnauthorized, types.APIError{
-			Code:      constants.ErrorInvalidPassword,
-			Message:   "Invalid username or password",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
 		return
 	}
 
-	accessToken, err := GenerateAccessToken(user)
+	// Create JWT claims: subject, role, and expiry.
+	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
+	claims := jwt.MapClaims{
+		"user": user.ID,
+		"role": user.Role.Name,
+		"exp":  expirationTime.Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, err := token.SignedString([]byte(config.SecretKey))
 	if err != nil {
-		log.Error("Failed to generate access token", "user_id", user.ID, "error", err.Error())
-		c.JSON(http.StatusInternalServerError, types.APIError{
-			Code:      constants.ErrorInternalServer,
-			Message:   "Failed to generate token",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
 		return
 	}
 
-	// Generate refresh token
-	refreshToken, err := StoreRefreshToken(user.ID)
-	if err != nil {
-		log.Error("Failed to generate refresh token", "user_id", user.ID, "error", err.Error())
-		c.JSON(http.StatusInternalServerError, types.APIError{
-			Code:      constants.ErrorInternalServer,
-			Message:   "Failed to generate refresh token",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
-		return
-	}
-
-	log.Info("User logged in successfully", "username", user.Username, "user_id", user.ID)
-
-	c.JSON(http.StatusOK, types.TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    GetTokenExpirationSeconds(),
-		TokenType:    "Bearer",
-		Timestamp:    time.Now().Unix(),
-	})
+	c.JSON(http.StatusOK, gin.H{"token": tokenStr})
 }
 
 // SecureL represents the payload for user login.
@@ -268,115 +171,64 @@ type SecureLoginRequest struct {
 	CaptchaSolution string `json:"captchaSolution"`
 }
 
-// LoginHandler authenticates the user and returns a JWT token with refresh token.
-// @Summary      Secure Login a user
-// @Description  Authenticate user credentials with captcha and return a signed JWT with refresh token
+// LoginHandler authenticates the user and returns a JWT token.
+// @Summary      Login a user
+// @Description  Authenticate user credentials and return a signed JWT
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
 // @Param        request  body      SecureLoginRequest  true  "Login payload"
-// @Success      200      {object}  types.TokenResponse  "JWT token with refresh token"
-// @Failure      400      {object}  types.APIError "Invalid JSON format or captcha"
-// @Failure      401      {object}  types.APIError "Unauthorized: invalid credentials"
-// @Failure      500      {object}  types.APIError "Server error during token generation"
+// @Success      200      {object}  map[string]string  "JWT token"
+// @Failure      400      {object}  map[string]string  "Invalid JSON format"
+// @Failure      401      {object}  map[string]string  "Unauthorized: invalid credentials"
+// @Failure      500      {object}  map[string]string  "Server error during token generation"
 // @Router       /secure-login [post]
 func SecureLoginHandler(c *gin.Context) {
-	requestID, _ := c.Get("request_id")
-	log := logger.Get()
-
 	var req SecureLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Error("Invalid secure login request", "error", err.Error())
-		c.JSON(http.StatusBadRequest, types.APIError{
-			Code:      constants.ErrorInvalidJSON,
-			Message:   "Invalid JSON format",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
 		return
 	}
 
 	if req.CaptchaId == "" || req.CaptchaSolution == "" {
-		log.Error("Missing captcha fields in secure login")
-		c.JSON(http.StatusBadRequest, types.APIError{
-			Code:      constants.ErrorInvalidJSON,
-			Message:   "Captcha is required",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha is required"})
 		return
 	}
 
 	if !captcha.VerifyString(req.CaptchaId, req.CaptchaSolution) {
-		log.Error("Captcha verification failed", "username", req.Username)
-		c.JSON(http.StatusUnauthorized, types.APIError{
-			Code:      constants.ErrorInvalidPassword,
-			Message:   "Captcha verification failed",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Captcha verification failed"})
 		return
 	}
 
 	// Fetch user and its Role in one go:
 	user, err := database.DB.GetUserAndRoleByUsername(req.Username)
 	if err != nil {
-		log.Error("User not found during secure login", "username", req.Username, "error", err.Error())
-		c.JSON(http.StatusUnauthorized, types.APIError{
-			Code:      constants.ErrorInvalidPassword,
-			Message:   "Invalid username or password",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Compare the stored hashed password with the incoming password.
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		log.Error("Invalid password during secure login", "username", req.Username)
-		c.JSON(http.StatusUnauthorized, types.APIError{
-			Code:      constants.ErrorInvalidPassword,
-			Message:   "Invalid username or password",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
 		return
 	}
 
-	accessToken, err := GenerateAccessToken(user)
+	// Create JWT claims: subject, role, and expiry.
+	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
+	claims := jwt.MapClaims{
+		"user": user.ID,
+		"role": user.Role.Name,
+		"exp":  expirationTime.Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, err := token.SignedString([]byte(config.SecretKey))
 	if err != nil {
-		log.Error("Failed to generate access token", "user_id", user.ID, "error", err.Error())
-		c.JSON(http.StatusInternalServerError, types.APIError{
-			Code:      constants.ErrorInternalServer,
-			Message:   "Failed to generate token",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
 		return
 	}
 
-	// Generate refresh token
-	refreshToken, err := StoreRefreshToken(user.ID)
-	if err != nil {
-		log.Error("Failed to generate refresh token", "user_id", user.ID, "error", err.Error())
-		c.JSON(http.StatusInternalServerError, types.APIError{
-			Code:      constants.ErrorInternalServer,
-			Message:   "Failed to generate refresh token",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
-		return
-	}
-
-	log.Info("User logged in securely", "username", user.Username, "user_id", user.ID)
-
-	c.JSON(http.StatusOK, types.TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    GetTokenExpirationSeconds(),
-		TokenType:    "Bearer",
-		Timestamp:    time.Now().Unix(),
-	})
+	c.JSON(http.StatusOK, gin.H{"token": tokenStr})
 }
 
 // DeleteUserHandler deletes a user based on the username passed in the URL parameter. godoc
@@ -399,14 +251,7 @@ func DeleteUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Check if user exists first
-	_, err := database.DB.GetUserByUsername(username)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	err = database.DB.DeleteUserByUsername(username)
+	err := database.DB.DeleteUserByUsername(username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
 		return
@@ -462,29 +307,4 @@ func UpdateUserRoleHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
-}
-
-// GenerateAccessToken creates a new JWT access token for a user
-func GenerateAccessToken(user *database.User) (string, error) {
-	var primaryRole string
-	if len(user.Roles) > 0 {
-		primaryRole = user.Roles[0].Name
-	} else {
-		primaryRole = constants.DefaultRole
-	}
-
-	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
-	claims := jwt.MapClaims{
-		constants.ClaimKeyUserID: user.ID,
-		constants.ClaimKeyRole:   primaryRole,
-		constants.ClaimKeyExpiry: expirationTime.Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(config.SecretKey))
-}
-
-// GetTokenExpirationSeconds returns token expiration in seconds
-func GetTokenExpirationSeconds() int {
-	return int(config.TokenExpirationPeriod.Seconds())
 }

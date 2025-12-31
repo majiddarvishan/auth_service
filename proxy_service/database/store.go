@@ -15,27 +15,24 @@ type Store interface {
 	UpdateUser(u *User) error
 	DeleteUser(id uint) error
 	DeleteUserByUsername(username string) error
+	PermanentlyDeleteUser(id uint) error // Hard delete (GDPR compliance)
+	RestoreUser(id uint) error           // Restore soft-deleted user
 
 	GetUserAndRoleByUsername(username string) (*User, error)
 	UpdateUserRoleByUsername(username, roleName string) error
-	
-	// Multi-role support
-	AddRolesToUser(userID uint, roleNames []string) error
-	RemoveRolesFromUser(userID uint, roleNames []string) error
-	GetUserRoles(userID uint) ([]Role, error)
-	SetUserRoles(userID uint, roleNames []string) error // Replace all roles
 
-    GetUserPhones(userName string) ([]string, error)
-    AddPhoneForUser(username string, phones []string) error
+	GetUserPhones(userName string) ([]string, error)
+	AddPhoneForUser(username string, phones []string) error
 
 	// Role
 	CreateRole(r *Role) error
 	GetRoleByID(id uint) (*Role, error)
 	GetRoleByName(name string) (*Role, error)
 	GetAllRoles() ([]Role, error)
-	GetRoles(limit, offset int) ([]Role, int64, error) // Paginated roles
 	UpdateRole(r *Role) error
 	DeleteRole(id uint) error
+	PermanentlyDeleteRole(id uint) error // Hard delete
+	RestoreRole(id uint) error           // Restore soft-deleted role
 
 	// AccountingRule
 	CreateAccountingRule(a *AccountingRule) error
@@ -51,15 +48,7 @@ type Store interface {
 	GetAllCustomEndpoints() ([]CustomEndpoint, error)
 	UpdateCustomEndpoint(c *CustomEndpoint) error
 	DeleteCustomEndpoint(id uint) error
-    DeleteCustomEndpointByPath(path string) error
-
-	// RefreshToken
-	CreateRefreshToken(rt *RefreshToken) error
-	GetRefreshToken(token string) (*RefreshToken, error)
-	ValidateRefreshToken(token string) (*RefreshToken, error) // Check if valid and not revoked
-	RevokeRefreshToken(token string) error
-	RevokeAllUserTokens(userID uint) error // Logout from all devices
-	DeleteExpiredTokens() error // Cleanup expired tokens
+	DeleteCustomEndpointByPath(path string) error
 }
 
 var DB Store

@@ -4,9 +4,8 @@ import (
 	"auth_service/config"
 	"auth_service/handlers"
 	"auth_service/middleware"
-	"log"
-	"time"
 
+	"log"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
@@ -17,16 +16,6 @@ import (
 
 	_ "auth_service/docs"
 )
-
-// RateLimitMiddleware creates a simple rate limiter (5 requests per 10 seconds per IP)
-func RateLimitMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// In production, use a proper rate limiter like github.com/ulule/limiter
-		// This is a placeholder. For full implementation, add package:
-		// import "github.com/ulule/limiter/v3"
-		c.Next()
-	}
-}
 
 // Explicit CORS middleware for captcha endpoints
 func CaptchaCorsMiddleware() gin.HandlerFunc {
@@ -52,14 +41,9 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// httpsRouter.RedirectTrailingSlash = false
 	// httpsRouter.RemoveExtraSlash = true
 
-	// Global middleware
-	httpsRouter.Use(middleware.RequestIDMiddleware)          // Add request ID for tracing
-	httpsRouter.Use(middleware.SecurityHeadersMiddleware)    // Add security headers
-	httpsRouter.Use(middleware.RateLimitMiddleware(100, 60*time.Second)) // Rate limit: 100 req/min
-
-	// Enable CORS for frontend requests using configured origins.
+	// Enable CORS for frontend requests.
 	corsConfig := cors.Config{
-		AllowOrigins:     config.AllowedCORSOrigins,
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -69,10 +53,6 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 
 	httpsRouter.Use(cors.New(corsConfig))
 	// httpRouter.Use(cors.New(corsConfig))
-
-	// Health check and info endpoints (no auth required)
-	httpsRouter.GET("/health", handlers.HealthHandler)
-	httpsRouter.GET("/version", handlers.VersionHandler)
 
 	// Create a separate group for captcha endpoints with explicit CORS
 	captchaGroup := httpsRouter.Group(config.BaseApi + "/captcha")
@@ -121,14 +101,6 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	rootGroup.POST("/login", handlers.LoginHandler)
 	rootGroup.POST("/secure-login", handlers.SecureLoginHandler)
 
-	// Refresh token and logout endpoints
-	rootGroup.POST("/refresh", handlers.RefreshAccessTokenHandler)
-	rootGroup.POST("/logout", handlers.RevokeRefreshTokenHandler)
-	rootGroup.POST("/logout-all",
-		middleware.AuthMiddleware,
-		handlers.LogoutAllDevicesHandler,
-	)
-
 	rootGroup.GET("/admin",
 		middleware.AuthMiddleware,          // Ensure user is authenticated.
 		middleware.RoleMiddleware("admin"), // Ensure only admins can access.
@@ -169,31 +141,6 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.UpdateUserRoleHandler,
-	)
-
-	// Multi-role management endpoints (Admin Only)
-	rootGroup.GET("/users/:username/roles",
-		middleware.AuthMiddleware,
-		middleware.RoleMiddleware("admin"),
-		handlers.GetUserRoles,
-	)
-
-	rootGroup.POST("/users/:username/roles",
-		middleware.AuthMiddleware,
-		middleware.RoleMiddleware("admin"),
-		handlers.AddUserRoles,
-	)
-
-	rootGroup.PUT("/users/:username/roles",
-		middleware.AuthMiddleware,
-		middleware.RoleMiddleware("admin"),
-		handlers.SetUserRoles,
-	)
-
-	rootGroup.DELETE("/users/:username/roles",
-		middleware.AuthMiddleware,
-		middleware.RoleMiddleware("admin"),
-		handlers.RemoveUserRoles,
 	)
 
 	// Create New Role (Admin Only)

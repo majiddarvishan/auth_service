@@ -2,13 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
-	"time"
 
-	"auth_service/constants"
 	"auth_service/database"
-	"auth_service/logger"
-	"auth_service/types"
 	"github.com/gin-gonic/gin"
 )
 
@@ -98,68 +93,20 @@ func CreateRoleHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Role created successfully", "role": role})
 }
 
-// GetRolesHandler returns all roles with optional pagination.
+// GetRolesHandler returns all roles.
 //
 // @Summary      List all roles
-// @Description  Returns a list of all roles defined in the system with pagination support.
+// @Description  Returns a list of all roles defined in the system.
 // @Tags         roles
 // @Produce      json
-// @Param        page     query    int  false  "Page number (default: 1)"
-// @Param        limit    query    int  false  "Items per page (default: 10, max: 100)"
-// @Success      200      {object} types.PaginatedResponse
-// @Failure      400      {object} types.APIError  "Invalid query parameters"
-// @Failure      500      {object} types.APIError  "Server error"
+// @Success      200  {object}  RolesListResponse
+// @Failure      500  {object}  ErrorResponse
 // @Router       /roles [get]
 func GetRolesHandler(c *gin.Context) {
-	requestID, _ := c.Get("request_id")
-	log := logger.Get()
-
-	// Parse pagination parameters
-	page := 1
-	limit := constants.DefaultPageLimit
-	maxLimit := constants.DefaultMaxPageLimit
-
-	if p := c.Query("page"); p != "" {
-		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
-			page = parsedPage
-		}
-	}
-
-	if l := c.Query("limit"); l != "" {
-		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
-			if parsedLimit > maxLimit {
-				parsedLimit = maxLimit
-			}
-			limit = parsedLimit
-		}
-	}
-
-	// Calculate offset
-	offset := (page - 1) * limit
-
-	// Get paginated roles
-	roles, total, err := database.DB.GetRoles(limit, offset)
-	if err != nil {
-		log.Error("Failed to fetch roles", "error", err.Error())
-		c.JSON(http.StatusInternalServerError, types.APIError{
-			Code:      constants.ErrorInternalServer,
-			Message:   "Failed to fetch roles",
-			Timestamp: time.Now().Unix(),
-			RequestID: requestID.(string),
-		})
-		return
-	}
-
-	totalPages := (total + int64(limit) - 1) / int64(limit)
-
-	log.Info("Roles retrieved", "total", total, "page", page, "limit", limit)
-
-	c.JSON(http.StatusOK, types.PaginatedResponse{
-		Data:       roles,
-		Total:      total,
-		Page:       page,
-		Limit:      limit,
-		TotalPages: totalPages,
-		Timestamp:  time.Now().Unix(),
-	})
+    roles, err := database.DB.GetAllRoles()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch roles"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"roles": roles})
 }
