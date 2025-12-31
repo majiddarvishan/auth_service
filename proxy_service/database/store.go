@@ -15,14 +15,12 @@ type Store interface {
 	UpdateUser(u *User) error
 	DeleteUser(id uint) error
 	DeleteUserByUsername(username string) error
-	PermanentlyDeleteUser(id uint) error // Hard delete (GDPR compliance)
-	RestoreUser(id uint) error           // Restore soft-deleted user
 
 	GetUserAndRoleByUsername(username string) (*User, error)
 	UpdateUserRoleByUsername(username, roleName string) error
 
-	GetUserPhones(userName string) ([]string, error)
-	AddPhoneForUser(username string, phones []string) error
+    GetUserPhones(userName string) ([]string, error)
+    AddPhoneForUser(username string, phones []string) error
 
 	// Role
 	CreateRole(r *Role) error
@@ -31,8 +29,6 @@ type Store interface {
 	GetAllRoles() ([]Role, error)
 	UpdateRole(r *Role) error
 	DeleteRole(id uint) error
-	PermanentlyDeleteRole(id uint) error // Hard delete
-	RestoreRole(id uint) error           // Restore soft-deleted role
 
 	// AccountingRule
 	CreateAccountingRule(a *AccountingRule) error
@@ -48,7 +44,7 @@ type Store interface {
 	GetAllCustomEndpoints() ([]CustomEndpoint, error)
 	UpdateCustomEndpoint(c *CustomEndpoint) error
 	DeleteCustomEndpoint(id uint) error
-	DeleteCustomEndpointByPath(path string) error
+    DeleteCustomEndpointByPath(path string) error
 }
 
 var DB Store
