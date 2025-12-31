@@ -150,6 +150,39 @@ info:
   version: "1.0"
 paths:
   /admin/custom-endpoints:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a previously registered custom endpoint by path and restores
+        a 404 handler for it.
+      parameters:
+      - description: Custom endpoint object (must include path)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SwaggerCustomEndpoint'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Custom endpoint deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid JSON payload
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Failed to delete or find custom endpoint
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a custom endpoint
+      tags:
+      - CustomEndpoints
     post:
       consumes:
       - application/json
@@ -190,7 +223,7 @@ paths:
             type: object
       summary: Create Custom Endpoint
       tags:
-      - Admin
+      - CustomEndpoints
   /admin/dashboard:
     get:
       description: Retrieves a list of all users (username + role) and all accounting

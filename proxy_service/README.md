@@ -65,6 +65,98 @@ pandoc output.adoc -o output.docx
 pip install python-docx
 python swagger2docx.py
 
+## Running with Docker Compose
+
+### Prerequisites
+
+- Docker and Docker Compose installed
+- TLS certificates in `deployments/tls/` directory:
+  - `localhost.pem` (certificate)
+  - `localhost-key.pem` (private key)
+
+### Setup and Run
+
+1. Generate TLS certificates (if not present):
+
+```bash
+cd deployments
+mkcert localhost 127.0.0.1 ::1
+mv localhost.pem tls/
+mv localhost-key.pem tls/
+cd ..
+```
+
+2. Build the Docker image:
+
+```bash
+docker-compose -f deployments/docker-compose.yml build
+```
+
+3. Start services:
+
+```bash
+docker-compose -f deployments/docker-compose.yml up -d
+```
+
+4. Verify services are running:
+
+```bash
+docker-compose -f deployments/docker-compose.yml ps
+```
+
+### Environment Variables (in docker-compose.yml)
+
+| Variable | Value | Notes |
+|----------|-------|-------|
+| `GIN_MODE` | `release` | Production mode (no debug logs) |
+| `BASE_API` | `/v1/api` | API endpoint prefix |
+| `TLS_PATH` | `/etc/tls` | Path to TLS certs inside container |
+| `SECRET_KEY` | 64-char hex | JWT signing key (generate: `openssl rand -hex 32`) |
+| `TOKEN_EXPIRATION_PERIOD` | `24h` | Access token lifetime |
+| `DB_HOST` | `postgres` | PostgreSQL host (use service name) |
+| `DB_PORT` | `5432` | PostgreSQL port |
+| `DB_USER` | `postgres` | PostgreSQL user |
+| `DB_PASSWORD` | `postgres` | PostgreSQL password |
+| `DB_NAME` | `proxy_db` | Database name |
+| `ACCOUNTING_ENDPOINT` | `http://...` | External accounting service (optional) |
+
+### Service Health
+
+Both services include health checks:
+- **auth_proxy**: Listens on HTTPS 8443
+- **postgres**: PostgreSQL healthcheck with pg_isready
+
+### View Logs
+
+```bash
+# All services
+docker-compose -f deployments/docker-compose.yml logs -f
+
+# Specific service
+docker-compose -f deployments/docker-compose.yml logs -f auth_proxy
+docker-compose -f deployments/docker-compose.yml logs -f postgres
+```
+
+### Access API
+
+```bash
+# Health check
+curl -k https://localhost:8443/health
+
+# Swagger UI
+# Open browser to https://localhost:8443/swagger/index.html
+```
+
+### Cleanup
+
+```bash
+# Stop services
+docker-compose -f deployments/docker-compose.yml down
+
+# Remove volumes (wipe database)
+docker-compose -f deployments/docker-compose.yml down -v
+```
+
 ## Install PostgreSQL
 
 ```bash

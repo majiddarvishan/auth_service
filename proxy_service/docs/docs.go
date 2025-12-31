@@ -34,7 +34,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin"
+                    "CustomEndpoints"
                 ],
                 "summary": "Create Custom Endpoint",
                 "parameters": [
@@ -83,6 +83,53 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a previously registered custom endpoint by path and restores a 404 handler for it.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomEndpoints"
+                ],
+                "summary": "Delete a custom endpoint",
+                "parameters": [
+                    {
+                        "description": "Custom endpoint object (must include path)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SwaggerCustomEndpoint"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Custom endpoint deleted successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid JSON payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete or find custom endpoint",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
