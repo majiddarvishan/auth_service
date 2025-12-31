@@ -126,13 +126,15 @@ func (s *PGStore) DeleteUserByUsername(username string) error {
 		return err
 	}
 
-	// Permanently delete the user to clear the unique constraint.
-	// if err := database.DB.Unscoped().Delete(&user).Error; err != nil {
-	//     c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
-	//     return
-	// }
-
 	return nil
+}
+
+func (s *PGStore) PermanentlyDeleteUser(id uint) error {
+	return s.db.Unscoped().Delete(&User{}, id).Error
+}
+
+func (s *PGStore) RestoreUser(id uint) error {
+	return s.db.Model(&User{}).Where("id = ?", id).Update("deleted_at", nil).Error
 }
 
 func (s *PGStore) GetUserPhones(userName string) ([]string, error) {
@@ -215,6 +217,14 @@ func (s *PGStore) DeleteRole(id uint) error {
 	return s.db.Delete(&Role{}, id).Error
 }
 
+func (s *PGStore) PermanentlyDeleteRole(id uint) error {
+	return s.db.Unscoped().Delete(&Role{}, id).Error
+}
+
+func (s *PGStore) RestoreRole(id uint) error {
+	return s.db.Model(&Role{}).Where("id = ?", id).Update("deleted_at", nil).Error
+}
+
 // AccountingRule
 func (s *PGStore) CreateAccountingRule(a *AccountingRule) error { return s.db.Create(a).Error }
 func (s *PGStore) GetAccountingRuleByID(id uint) (*AccountingRule, error) {
@@ -279,6 +289,6 @@ func (s *PGStore) DeleteCustomEndpoint(id uint) error {
 }
 
 func (s *PGStore) DeleteCustomEndpointByPath(path string) error {
-    // permanently delete the row
-	return  s.db.Unscoped().Where("path = ?", path).Delete(&CustomEndpoint{}).Error
+	// permanently delete the row
+	return s.db.Unscoped().Where("path = ?", path).Delete(&CustomEndpoint{}).Error
 }

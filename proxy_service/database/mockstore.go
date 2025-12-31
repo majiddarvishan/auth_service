@@ -29,7 +29,7 @@ func NewMockStore() *MockStore {
 // Init is a no-op for MockStore.
 func (m *MockStore) Init() error {
 
-    hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), 14)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin"), 14)
 	if err != nil {
 		return errors.New("Could not hash password")
 	}
@@ -126,6 +126,34 @@ func (m *MockStore) DeleteUser(id uint) error {
 }
 
 func (m *MockStore) DeleteUserByUsername(username string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for id, u := range m.users {
+		if u.Username == username {
+			delete(m.users, id)
+			return nil
+		}
+	}
+	return errors.New("user not found")
+}
+
+func (m *MockStore) PermanentlyDeleteUser(id uint) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.users[id]; !ok {
+		return errors.New("user not found")
+	}
+	delete(m.users, id)
+	return nil
+}
+
+func (m *MockStore) RestoreUser(id uint) error {
+	// Mock doesn't actually track soft deletes, just mark as available
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.users[id]; !ok {
+		return errors.New("user not found")
+	}
 	return nil
 }
 
@@ -187,6 +215,25 @@ func (m *MockStore) DeleteRole(id uint) error {
 		return errors.New("role not found")
 	}
 	delete(m.roles, id)
+	return nil
+}
+
+func (m *MockStore) PermanentlyDeleteRole(id uint) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.roles[id]; !ok {
+		return errors.New("role not found")
+	}
+	delete(m.roles, id)
+	return nil
+}
+
+func (m *MockStore) RestoreRole(id uint) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.roles[id]; !ok {
+		return errors.New("role not found")
+	}
 	return nil
 }
 
@@ -294,23 +341,22 @@ func (m *MockStore) DeleteCustomEndpoint(id uint) error {
 }
 
 func (m *MockStore) DeleteCustomEndpointByPath(path string) error {
-    m.mu.Lock()
+	m.mu.Lock()
 	defer m.mu.Unlock()
 
-    id := -1
+	id := -1
 	for _, c := range m.customEndpoints {
 		if c.Path == path {
-            id = int(c.ID)
-            break
+			id = int(c.ID)
+			break
 		}
 	}
 
-    if id == -1 {
-        return errors.New("custom endpoint not found")
-    }
+	if id == -1 {
+		return errors.New("custom endpoint not found")
+	}
 
-    delete(m.customEndpoints, uint(id))
+	delete(m.customEndpoints, uint(id))
 
 	return nil
 }
-
