@@ -7,7 +7,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// RoleMiddleware accepts a list of allowed roles and permits access only if the user's role is allowed.
+// RoleMiddleware accepts a list of allowed roles and permits access only if the user has any of the allowed roles.
+// Supports both single role (legacy "role" claim) and multi-role (new "roles" claim as array).
 func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claimsVal, exists := c.Get("claims")
@@ -22,18 +23,37 @@ func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		role, ok := claims["role"].(string)
-		if !ok {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Role not present in token"})
-			c.Abort()
-			return
-		}
 
 		allowed := false
-		for _, r := range allowedRoles {
-			if r == role {
-				allowed = true
-				break
+
+		// Try multi-role first (new format: "roles" as []interface{})
+		if rolesVal, ok := claims["roles"]; ok {
+			if rolesArray, ok := rolesVal.([]interface{}); ok {
+				for _, userRoleVal := range rolesArray {
+					if userRole, ok := userRoleVal.(string); ok {
+						for _, allowedRole := range allowedRoles {
+							if allowedRole == userRole {
+								allowed = true
+								break
+							}
+						}
+						if allowed {
+							break
+						}
+					}
+				}
+			}
+		}
+
+		// Fall back to single role (legacy format: "role" as string)
+		if !allowed {
+			if roleVal, ok := claims["role"].(string); ok {
+				for _, allowedRole := range allowedRoles {
+					if allowedRole == roleVal {
+						allowed = true
+						break
+					}
+				}
 			}
 		}
 

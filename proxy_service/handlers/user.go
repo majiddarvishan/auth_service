@@ -103,8 +103,8 @@ func RegisterHandler(c *gin.Context) {
 // @Property captchaId body string true  "ID of the captcha challenge"
 // @Property captchaSolution body string true  "Solution to the captcha"
 type LoginRequest struct {
-	Username        string `json:"username"`
-	Password        string `json:"password"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 // LoginHandler authenticates the user and returns a JWT token.
@@ -139,12 +139,19 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	// Create JWT claims: subject, role, and expiry.
+	// Create JWT claims: user ID, primary role, and expiry
 	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
+
+	// Include roles as array (even if just primary role for multi-role readiness)
+	var roleNames []string
+	if user.Role.Name != "" {
+		roleNames = append(roleNames, user.Role.Name)
+	}
+
 	claims := jwt.MapClaims{
-		"user": user.ID,
-		"role": user.Role.Name,
-		"exp":  expirationTime.Unix(),
+		"user":  user.ID,
+		"roles": roleNames,
+		"exp":   expirationTime.Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -154,7 +161,7 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenStr})
+	c.JSON(http.StatusOK, gin.H{"token": tokenStr, "expires_in": int(config.TokenExpirationPeriod.Seconds())})
 }
 
 // SecureL represents the payload for user login.
@@ -213,12 +220,19 @@ func SecureLoginHandler(c *gin.Context) {
 		return
 	}
 
-	// Create JWT claims: subject, role, and expiry.
+	// Create JWT claims: user ID, primary role, and expiry
 	expirationTime := time.Now().Add(config.TokenExpirationPeriod)
+
+	// Include roles as array (even if just primary role for multi-role readiness)
+	var roleNames []string
+	if user.Role.Name != "" {
+		roleNames = append(roleNames, user.Role.Name)
+	}
+
 	claims := jwt.MapClaims{
-		"user": user.ID,
-		"role": user.Role.Name,
-		"exp":  expirationTime.Unix(),
+		"user":  user.ID,
+		"roles": roleNames,
+		"exp":   expirationTime.Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -228,7 +242,7 @@ func SecureLoginHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenStr})
+	c.JSON(http.StatusOK, gin.H{"token": tokenStr, "expires_in": int(config.TokenExpirationPeriod.Seconds())})
 }
 
 // DeleteUserHandler deletes a user based on the username passed in the URL parameter. godoc
