@@ -30,7 +30,7 @@ type RegisterRequest struct {
 // RegisterHandler handles new user registrations. godoc
 // @Summary      Register a new user
 // @Description  Create a new user account with username, password, and role
-// @Tags         Auth
+// @Tags         users
 // @Accept       json
 // @Produce      json
 // @Param        request  body      RegisterRequest  true  "Registration payload"
@@ -118,7 +118,7 @@ type LoginRequest struct {
 // LoginHandler authenticates the user and returns a JWT token.
 // @Summary      Login a user
 // @Description  Authenticate user credentials and return a signed JWT
-// @Tags         Auth
+// @Tags         users
 // @Accept       json
 // @Produce      json
 // @Param        request  body      LoginRequest  true  "Login payload"
@@ -182,7 +182,7 @@ type SecureLoginRequest struct {
 // LoginHandler authenticates the user and returns a JWT token.
 // @Summary      Login a user
 // @Description  Authenticate user credentials and return a signed JWT
-// @Tags         Auth
+// @Tags         users
 // @Accept       json
 // @Produce      json
 // @Param        request  body      SecureLoginRequest  true  "Login payload"
@@ -243,7 +243,7 @@ func SecureLoginHandler(c *gin.Context) {
 // This endpoint should be accessible only to admins.
 // @Summary      Delete a user
 // @Description  Delete an existing user account (admin only)
-// @Tags         Auth
+// @Tags         users
 // @Produce      json
 // @Param        username  path      string  true  "Username to delete"
 // @Success      200       {object}  map[string]string  "User deleted successfully"
@@ -279,7 +279,7 @@ type RoleUpdateRequest struct {
 // UpdateUserRoleHandler allows an admin to update a user's role. godoc
 // @Summary      Update user role
 // @Description  Update the role of an existing user (admin only)
-// @Tags         Auth
+// @Tags         users
 // @Accept       json
 // @Produce      json
 // @Param        username  path      string             true  "Username to update"

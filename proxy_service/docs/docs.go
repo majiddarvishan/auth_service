@@ -34,7 +34,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin"
+                    "CustomEndpoints"
                 ],
                 "summary": "Create Custom Endpoint",
                 "parameters": [
@@ -83,6 +83,53 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a previously registered custom endpoint by path and restores a 404 handler for it.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomEndpoints"
+                ],
+                "summary": "Delete a custom endpoint",
+                "parameters": [
+                    {
+                        "description": "Custom endpoint object (must include path)",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SwaggerCustomEndpoint"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Custom endpoint deleted successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid JSON payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete or find custom endpoint",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -205,7 +252,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "users"
                 ],
                 "summary": "Login a user",
                 "parameters": [
@@ -339,7 +386,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "users"
                 ],
                 "summary": "Login a user",
                 "parameters": [
@@ -394,6 +441,36 @@ const docTemplate = `{
             }
         },
         "/users": {
+            "get": {
+                "description": "List all users with information",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "List Users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ListUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create a new user account with username, password, and role",
                 "consumes": [
@@ -403,7 +480,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "users"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
@@ -455,7 +532,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "users"
                 ],
                 "summary": "Delete a user",
                 "parameters": [
@@ -517,7 +594,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "users"
                 ],
                 "summary": "Update user role",
                 "parameters": [
@@ -620,6 +697,21 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.ListUserResponse": {
+            "description": "ListUserResponse defines the expected request body for creating a new user.",
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.LoginRequest": {
             "description": "LoginRequest defines the expected request body for logging in.",
             "type": "object",
@@ -636,6 +728,9 @@ const docTemplate = `{
             "description": "RegisterRequest defines the expected request body for creating a new user.",
             "type": "object",
             "properties": {
+                "created_by": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },

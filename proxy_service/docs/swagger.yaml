@@ -26,6 +26,17 @@ definitions:
       error:
         type: string
     type: object
+  handlers.ListUserResponse:
+    description: ListUserResponse defines the expected request body for creating a
+      new user.
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      username:
+        type: string
+    type: object
   handlers.LoginRequest:
     description: LoginRequest defines the expected request body for logging in.
     properties:
@@ -38,6 +49,8 @@ definitions:
     description: RegisterRequest defines the expected request body for creating a
       new user.
     properties:
+      created_by:
+        type: string
       password:
         type: string
       role:
@@ -150,6 +163,39 @@ info:
   version: "1.0"
 paths:
   /admin/custom-endpoints:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a previously registered custom endpoint by path and restores
+        a 404 handler for it.
+      parameters:
+      - description: Custom endpoint object (must include path)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SwaggerCustomEndpoint'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Custom endpoint deleted successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid JSON payload
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Failed to delete or find custom endpoint
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a custom endpoint
+      tags:
+      - CustomEndpoints
     post:
       consumes:
       - application/json
@@ -190,7 +236,7 @@ paths:
             type: object
       summary: Create Custom Endpoint
       tags:
-      - Admin
+      - CustomEndpoints
   /admin/dashboard:
     get:
       description: Retrieves a list of all users (username + role) and all accounting
@@ -304,7 +350,7 @@ paths:
             type: object
       summary: Login a user
       tags:
-      - Auth
+      - users
   /roles:
     get:
       description: Returns a list of all roles defined in the system.
@@ -392,8 +438,28 @@ paths:
             type: object
       summary: Login a user
       tags:
-      - Auth
+      - users
   /users:
+    get:
+      description: List all users with information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ListUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: List Users
+      tags:
+      - users
     post:
       consumes:
       - application/json
@@ -428,7 +494,7 @@ paths:
             type: object
       summary: Register a new user
       tags:
-      - Auth
+      - users
   /users/{username}:
     delete:
       description: Delete an existing user account (admin only)
@@ -467,7 +533,7 @@ paths:
             type: object
       summary: Delete a user
       tags:
-      - Auth
+      - users
   /users/{username}/role:
     put:
       consumes:
@@ -514,5 +580,5 @@ paths:
             type: object
       summary: Update user role
       tags:
-      - Auth
+      - users
 swagger: "2.0"
