@@ -37,3 +37,31 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDcwNDk1M
 ###
 GET https://localhost:8443/v1/api/sms/deliversm
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc4MTcxNzUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjJ9.XG_SftWXN1amSR2LSxF0qijey3X4vYuEHWJi2aGeliY
+
+
+###
+POST https://10.10.10.21:8443/api/v1/sms/send/simple
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjUxODc3MzEsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.pD8KEAd0uWHoARoANrTfuG8xhaKge1VEwsFlXTfjeDQ
+Content-Type: application/json
+
+{
+  "sender": "98100098786",
+  "receiver": "989121234567",
+  "message": "this is a long message1."
+}
+
+
+###
+POST https://10.10.10.21:8443/api/v1/prefix/add
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjUxODc3MzEsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.pD8KEAd0uWHoARoANrTfuG8xhaKge1VEwsFlXTfjeDQ
+Content-Type: application/json
+
+{
+    "user": "admin",
+    "numbers": [
+        {
+            "number": "981000",
+            "is_prefix": true
+        }
+    ]
+}

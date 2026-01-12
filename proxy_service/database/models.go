@@ -1,17 +1,18 @@
 package database
 
 import (
-    "github.com/lib/pq"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"uniqueIndex"`
-	Password string
-	RoleID   uint    // Foreign key field
-	Role     Role    `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Balance  float64 `gorm:"default:0"`
+	Username  string `gorm:"uniqueIndex"`
+	Password  string
+	RoleID    uint    // Foreign key field
+	Role      Role    `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Balance   float64 `gorm:"default:0"`
+	CreatedBy string
 }
 
 type Role struct {
@@ -36,7 +37,7 @@ type CustomEndpoint struct {
 }
 
 type Phone struct {
-  gorm.Model
-  Number string `gorm:"not null"`
-  UserID uint   `gorm:"index;not null"`
+	gorm.Model
+	Number string `gorm:"not null"`
+	UserID uint   `gorm:"index;not null"`
 }

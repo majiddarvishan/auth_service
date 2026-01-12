@@ -3,10 +3,9 @@ import api from '../services/api';
 
 const SendSMS = () => {
   const [form, setForm] = useState({
-    senders: "",
-    receivers: "",
-    text: "",
-    track_ids: ""
+    sender: "",
+    receiver: "",
+    text: ""
   });
 
   const countLines = (value) =>
@@ -21,12 +20,11 @@ const SendSMS = () => {
     const payload = {
       senders: form.senders.split('\n').map(s => s.trim()).filter(Boolean),
       receivers: form.receivers.split('\n').map(r => r.trim()).filter(Boolean),
-      text: form.text,
-      track_ids: form.track_ids.split('\n').map(t => t.trim()).filter(Boolean),
+      text: form.text
     };
 
     try {
-      await api.post("/sms/send", payload, {
+      await api.post("/sms/send/simple", payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       alert("SMS sent!");
