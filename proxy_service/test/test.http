@@ -132,7 +132,7 @@ POST https://localhost:8443/api/v1/users
 Content-Type: application/json
 
 {
-  "username": "demo3",
+  "username": "demo4",
   "password": "demo123",
   "role": "admin",
   "created_by": "majid"

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -12,6 +13,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// UserInfoResponse represents the payload for user registration. godoc
+// swagger:model UserInfoResponse
+// @Description UserInfoResponse defines the expected request body for creating a new user.
+// @Property username body string true "Username for the new account"
+// @Property created_by body string false "Creator of this user"
+// @Property created_at body string false "User creation date"
+type UserInfoResponse struct {
+	UserId    uint   `json:"user_id"`
+	UserName  string `json:"user_name"`
+	CreatedBy string `json:"created_by"`
+	CreatedAt string `json:"created_at"`
+}
 
 // RegisterRequest represents the payload for user registration. godoc
 // swagger:model RegisterRequest
@@ -34,7 +48,7 @@ type RegisterRequest struct {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      RegisterRequest  true  "Registration payload"
-// @Success      200      {object}  map[string]string  "User registered successfully"
+// @Success      200      {object}  UserInfoResponse
 // @Failure      400      {object}  map[string]string  "Invalid input or missing fields"
 // @Failure      500      {object}  map[string]string  "Server error during registration"
 // @Router       /users [post]
@@ -76,10 +90,10 @@ func RegisterHandler(c *gin.Context) {
 	}
 
 	user := database.User{
-		Username: req.Username,
-		Password: string(hashedPassword),
-		RoleID:   role.ID,
-        CreatedBy: req.CreatedBy,
+		Username:  req.Username,
+		Password:  string(hashedPassword),
+		RoleID:    role.ID,
+		CreatedBy: req.CreatedBy,
 	}
 
 	// // Use provided role or assign a default role.
@@ -100,7 +114,16 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
+	fmt.Printf("id is %d\n", user.ID)
+
+	info := UserInfoResponse{
+		UserId:    user.ID,
+		UserName:  req.Username,
+		CreatedBy: req.CreatedBy,
+		CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": info})
 }
 
 // LoginRequest represents the payload for user login.
@@ -317,41 +340,30 @@ func UpdateUserRoleHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
 }
 
-// ListUserResponse represents the payload for user registration. godoc
-// swagger:model ListUserResponse
-// @Description ListUserResponse defines the expected request body for creating a new user.
-// @Property username body string true "Username for the new account"
-// @Property created_by body string false "Creator of this user"
-// @Property created_at body string false "User creation date"
-type ListUserResponse struct {
-	Username  string `json:"username"`
-	CreatedBy string `json:"created_by"`
-    CreatedAt string `json:"created_at"`
-}
-
 // ListUserHandler handles get list of users. godoc
 // @Summary      List Users
 // @Description  List all users with information
 // @Tags         users
 // @Produce      json
-// @Success      200   {object}  ListUserResponse
+// @Success      200   {object}  UserInfoResponse
 // @Failure      400   {object}  ErrorResponse
 // @Failure      500   {object}  ErrorResponse
 // @Router       /users [get]
 func ListUserHandler(c *gin.Context) {
-    users, err := database.DB.GetAllUsers()
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
-        return
-    }
+	users, err := database.DB.GetAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		return
+	}
 
-    var all []ListUserResponse
-    for _, u := range users {
-         all = append(all, ListUserResponse{
-            Username : u.Username,
-             CreatedBy : u.CreatedBy,
-            CreatedAt : u.CreatedAt.Format("2006-01-02 15:04:05"),
-        })
-    }
-    c.JSON(http.StatusOK, gin.H{"users": all})
+	var all []UserInfoResponse
+	for _, u := range users {
+		all = append(all, UserInfoResponse{
+			UserId:    u.ID,
+			UserName:  u.Username,
+			CreatedBy: u.CreatedBy,
+			CreatedAt: u.CreatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{"users": all})
 }

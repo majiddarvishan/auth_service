@@ -40,7 +40,7 @@ func (s *PGStore) Init() error {
 }
 
 func (s *PGStore) CreateUser(u *User) error {
-	return s.db.Create(u).Error
+    return s.db.Create(u).Error
 }
 
 func (s *PGStore) GetUserByID(id uint) (*User, error) {
