@@ -140,3 +140,7 @@ Content-Type: application/json
 
 ### Get Users
 GET https://localhost:8443/api/v1/users
+
+### Delete a user
+DELETE https://localhost:8443/api/v1/users/14
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTg3MDQzNTcsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.ufe2_jz-R2Fr7DmclUqC7_YD6osTlskla0_MXhIJgqI

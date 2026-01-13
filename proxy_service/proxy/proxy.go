@@ -24,7 +24,7 @@ func init() {
 	deletedCustomRoute = make(map[string]*database.CustomEndpoint)
 }
 
-func toInt(i interface{}) (int, error) {
+func ToInt(i interface{}) (int, error) {
 	switch v := i.(type) {
 	case int:
 		return v, nil
@@ -123,7 +123,7 @@ func NewMultiTargetReverseProxy(targets []*url.URL) *httputil.ReverseProxy {
 		for key, value := range claims {
 			// fmt.Printf("  %s: %v\n", key, value)
 			if key == "user" {
-				val, err := toInt(value)
+				val, err := ToInt(value)
 				if err != nil {
 					fmt.Printf("invalid user id %v\n", value)
 					return

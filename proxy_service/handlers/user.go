@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+    "auth_service/proxy"
 	"auth_service/config"
 	"auth_service/database"
 
@@ -114,8 +115,6 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	fmt.Printf("id is %d\n", user.ID)
-
 	info := UserInfoResponse{
 		UserId:    user.ID,
 		UserName:  req.Username,
@@ -123,7 +122,7 @@ func RegisterHandler(c *gin.Context) {
 		CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": info})
+	c.JSON(http.StatusOK, info)
 }
 
 // LoginRequest represents the payload for user login.
@@ -262,27 +261,32 @@ func SecureLoginHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": tokenStr})
 }
 
-// DeleteUserHandler deletes a user based on the username passed in the URL parameter. godoc
-// This endpoint should be accessible only to admins.
+// DeleteUserHandler deletes a user based on the user id passed in the URL parameter. godoc
+// This endpoint should be accessible only by admins.
 // @Summary      Delete a user
 // @Description  Delete an existing user account (admin only)
 // @Tags         users
 // @Produce      json
-// @Param        username  path      string  true  "Username to delete"
+// @Param        id        path      string  true  "UserId to delete"
 // @Success      200       {object}  map[string]string  "User deleted successfully"
-// @Failure      400       {object}  map[string]string  "Username is required"
+// @Failure      400       {object}  map[string]string  "UserId is required"
 // @Failure      404       {object}  map[string]string  "User not found"
 // @Failure      500       {object}  map[string]string  "Could not delete user"
-// @Router       /users/{username} [delete]
+// @Router       /users/{id} [delete]
 func DeleteUserHandler(c *gin.Context) {
 	// Get the username from the URL parameter.
-	username := c.Param("username")
-	if username == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is required"})
+	userId := c.Param("id")
+	if userId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
 		return
 	}
 
-	err := database.DB.DeleteUserByUsername(username)
+    id, err := proxy.ToInt(userId)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "id must be integer"})
+		return
+    }
+	err = database.DB.DeleteUser(uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
 		return
