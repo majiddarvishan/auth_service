@@ -1,0 +1,88 @@
+@no-ssl-verify
+### Register Admin User
+POST http://10.10.10.21:8443/v1/api/v1/register
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "password",
+  "role": "admin"
+}
+
+### Create a New Role (Admin Only)
+POST https://10.10.10.21:8443/api/v1/roles
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY5OTQ3ODUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.QFQme9bX1gFE55nZXN4siMOrtWfDYDVjx-hHGFEq5rA
+
+{
+  "name": "guest",
+  "description": "guest"
+}
+
+
+### Register a New User
+POST https://10.10.10.21:8443/api/v1/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY5OTQ3ODUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.QFQme9bX1gFE55nZXN4siMOrtWfDYDVjx-hHGFEq5rA
+Content-Type: application/json
+
+{
+  "username": "demo1",
+  "password": "demo123",
+  "role": "guest"
+}
+
+### Delete a user
+DELETE http://10.10.10.21:8080/user/demo
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDUxMzEwNzIsInJvbGUiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.QIVY13wgBu93eYIh1RXPFrKlG2H3tN9cxZXpZyiceSg
+
+### Test the Auth Service Login Endpoint (Generate JWT Token)
+POST https://10.10.10.21:8443/api/v1/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+###
+POST https://10.10.10.21:8443/api/v1/prefix/add
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY5OTQ3ODUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.QFQme9bX1gFE55nZXN4siMOrtWfDYDVjx-hHGFEq5rA
+Content-Type: application/json
+
+{
+    "user": "admin",
+    "numbers": [
+        {
+            "number": "3000",
+            "is_prefix": true
+        }
+    ]
+}
+
+### Test the Auth Service Send SMS Endpoint (Protected)
+POST https://10.10.10.21:8443/api/v1/sms/send/simple
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY5OTQ3ODUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.QFQme9bX1gFE55nZXN4siMOrtWfDYDVjx-hHGFEq5rA
+Content-Type: application/json
+
+{
+  "sender": "3000123",
+  "receiver": "98123456789",
+  "message": "Hello, this is a test message!"
+}
+
+### Test the Auth Service Send SMS Endpoint (Protected)
+POST https://10.10.10.21:8443/api/v1/sms/status
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY5OTQ3ODUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.QFQme9bX1gFE55nZXN4siMOrtWfDYDVjx-hHGFEq5rA
+Content-Type: application/json
+
+[
+  {
+    "message_id": "242e2c6a-e6ca-4369-9c36-08beb70daf2f",
+    "track_id": ""
+  }
+]
+
+###
+GET https://10.10.10.21:8443/api/v1/prefix/search
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY5OTQ3ODUsInJvbGUiOiJhZG1pbiIsInVzZXIiOjF9.QFQme9bX1gFE55nZXN4siMOrtWfDYDVjx-hHGFEq5rA
+Content-Type: application/json

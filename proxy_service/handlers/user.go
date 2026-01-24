@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -274,7 +273,7 @@ func SecureLoginHandler(c *gin.Context) {
 // @Failure      500       {object}  map[string]string  "Could not delete user"
 // @Router       /users/{id} [delete]
 func DeleteUserHandler(c *gin.Context) {
-	// Get the username from the URL parameter.
+	// Get the user_id from the URL parameter.
 	userId := c.Param("id")
 	if userId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
@@ -286,6 +285,7 @@ func DeleteUserHandler(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"error": "id must be integer"})
 		return
     }
+
 	err = database.DB.DeleteUser(uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete user", "details": err.Error()})
@@ -370,4 +370,59 @@ func ListUserHandler(c *gin.Context) {
 		})
 	}
 	c.JSON(http.StatusOK, gin.H{"users": all})
+}
+
+// UpdatePasswordRequest represents the payload for updating a user's password. godoc
+// swagger:model UpdatePasswordRequest
+// @Description UpdatePasswordRequest defines the expected request body for password update.
+// @Property password body string true "New password for the user"
+type UpdatePasswordRequest struct {
+	Password string `json:"password"`
+}
+
+// UpdateUserPasswordHandler allows an admin to update a user's password. godoc
+// @Summary      Update user password
+// @Description  Update the password of an existing user (admin only)
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        username  path      string             true  "UserId to update"
+// @Param        request   body      UpdatePasswordRequest  true  "Password update payload"
+// @Success      200       {object}  map[string]string  "User password updated successfully"
+// @Failure      400       {object}  map[string]string  "Invalid input or missing fields"
+// @Failure      404       {object}  map[string]string  "User not found"
+// @Failure      500       {object}  map[string]string  "Failed to update user password"
+// @Router       /users/{id} [patch]
+func UpdateUserPasswordHandler(c *gin.Context) {
+    // Get the user_id from the URL parameter.
+	userId := c.Param("id")
+	if userId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+		return
+	}
+
+    id, err := proxy.ToInt(userId)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "id must be integer"})
+		return
+    }
+
+    var req UpdatePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
+		return
+	}
+
+	if req.Role == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Role is required"})
+		return
+	}
+
+	err := database.DB.UpdateUserRoleByUsername(username, req.Role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
 }

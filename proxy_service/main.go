@@ -20,8 +20,8 @@ import (
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host localhost:8080
-// @BasePath /v1/api
+// @host localhost:8443
+// @BasePath /api/v1
 func main() {
     dbMode := flag.String("d", "postgres", "Database mode. postgres or mock")
     flag.Parse()

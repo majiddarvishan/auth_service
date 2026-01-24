@@ -15,8 +15,8 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
-    "basePath": "/v1/api",
+    "host": "localhost:8443",
+    "basePath": "/api/v1",
     "paths": {
         "/admin/custom-endpoints": {
             "post": {
@@ -448,7 +448,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ListUserResponse"
+                            "$ref": "#/definitions/handlers.UserInfoResponse"
                         }
                     },
                     "400": {
@@ -490,12 +490,9 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User registered successfully",
+                        "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.UserInfoResponse"
                         }
                     },
                     "400": {
@@ -519,7 +516,7 @@
                 }
             }
         },
-        "/users/{username}": {
+        "/users/{id}": {
             "delete": {
                 "description": "Delete an existing user account (admin only)",
                 "produces": [
@@ -532,8 +529,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Username to delete",
-                        "name": "username",
+                        "description": "UserId to delete",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -549,7 +546,7 @@
                         }
                     },
                     "400": {
-                        "description": "Username is required",
+                        "description": "UserId is required",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -568,6 +565,75 @@
                     },
                     "500": {
                         "description": "Could not delete user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update the password of an existing user (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update user password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UserId to update",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Password update payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdatePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User password updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input or missing fields",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update user password",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -687,21 +753,6 @@
                     "type": "string"
                 },
                 "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.ListUserResponse": {
-            "description": "ListUserResponse defines the expected request body for creating a new user.",
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }
@@ -863,6 +914,33 @@
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdatePasswordRequest": {
+            "description": "UpdatePasswordRequest defines the expected request body for password update.",
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UserInfoResponse": {
+            "description": "UserInfoResponse defines the expected request body for creating a new user.",
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "user_name": {
                     "type": "string"
                 }
             }

@@ -4,6 +4,9 @@ import (
 	"auth_service/config"
 	"auth_service/handlers"
 	"auth_service/middleware"
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 
 	"log"
 	"net/http"
@@ -44,7 +47,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// Enable CORS for frontend requests.
 	corsConfig := cors.Config{
 		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -170,7 +173,40 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// }()
 	// if err := httpsRouter.RunTLS(httpsAddr, "cert.pem", "key.pem"); err != nil {
 	// if err := httpsRouter.RunTLS(httpsAddr, "localhost.pem", "localhost-key.pem"); err != nil {
-	if err := httpsRouter.RunTLS(httpsAddr, config.TLSPath+"/localhost.pem", config.TLSPath+"/localhost-key.pem"); err != nil {
-		log.Fatal("Failed to start HTTPS server:", err)
+	// if err := httpsRouter.RunTLS(httpsAddr, config.TLSPath+"/localhost.pem", config.TLSPath+"/localhost-key.pem"); err != nil {
+    // if err := httpsRouter.RunTLS(config.HttpsAddr, config.CertPath, config.KeyPath); err != nil {
+	// 	log.Fatal("Failed to start HTTPS server:", err)
+	// }
+
+
+
+    // Load CA
+	caCert, err := ioutil.ReadFile(config.CaFile)
+	if err != nil {
+		log.Fatalf("Failed to read CA file: %v", err)
+	}
+
+	caPool := x509.NewCertPool()
+	if !caPool.AppendCertsFromPEM(caCert) {
+		log.Fatal("Failed to append CA certificate")
+	}
+
+	// TLS config with mTLS
+	tlsConfig := &tls.Config{
+		ClientAuth: tls.RequireAndVerifyClientCert,
+		ClientCAs:  caPool,
+		MinVersion: tls.VersionTLS12,
+	}
+
+	server := &http.Server{
+		Addr:      config.HttpsAddr,
+		Handler:   httpsRouter,
+		TLSConfig: tlsConfig,
+	}
+
+	log.Println("Backend mTLS server running on", config.HttpsAddr)
+
+	if err := server.ListenAndServeTLS(config.CertPath, config.KeyPath); err != nil {
+		log.Fatal(err)
 	}
 }

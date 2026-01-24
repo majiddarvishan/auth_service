@@ -454,7 +454,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ListUserResponse"
+                            "$ref": "#/definitions/handlers.UserInfoResponse"
                         }
                     },
                     "400": {
@@ -496,12 +496,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "User registered successfully",
+                        "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.UserInfoResponse"
                         }
                     },
                     "400": {
@@ -525,7 +522,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{username}": {
+        "/users/{id}": {
             "delete": {
                 "description": "Delete an existing user account (admin only)",
                 "produces": [
@@ -538,8 +535,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Username to delete",
-                        "name": "username",
+                        "description": "UserId to delete",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -555,7 +552,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Username is required",
+                        "description": "UserId is required",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -574,6 +571,75 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Could not delete user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update the password of an existing user (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update user password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UserId to update",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Password update payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdatePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User password updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input or missing fields",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update user password",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -693,21 +759,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.ListUserResponse": {
-            "description": "ListUserResponse defines the expected request body for creating a new user.",
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }
@@ -872,6 +923,33 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "handlers.UpdatePasswordRequest": {
+            "description": "UpdatePasswordRequest defines the expected request body for password update.",
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UserInfoResponse": {
+            "description": "UserInfoResponse defines the expected request body for creating a new user.",
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "user_name": {
+                    "type": "string"
+                }
+            }
         }
     }
 }`
@@ -879,8 +957,8 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
-	BasePath:         "/v1/api",
+	Host:             "localhost:8443",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Auth service API",
 	Description:      "A Auth-service gateway.",

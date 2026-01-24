@@ -1,4 +1,4 @@
-basePath: /v1/api
+basePath: /api/v1
 definitions:
   handlers.AdminDashboardResponse:
     properties:
@@ -24,17 +24,6 @@ definitions:
       details:
         type: string
       error:
-        type: string
-    type: object
-  handlers.ListUserResponse:
-    description: ListUserResponse defines the expected request body for creating a
-      new user.
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: string
-      username:
         type: string
     type: object
   handlers.LoginRequest:
@@ -148,7 +137,27 @@ definitions:
       username:
         type: string
     type: object
-host: localhost:8080
+  handlers.UpdatePasswordRequest:
+    description: UpdatePasswordRequest defines the expected request body for password
+      update.
+    properties:
+      password:
+        type: string
+    type: object
+  handlers.UserInfoResponse:
+    description: UserInfoResponse defines the expected request body for creating a
+      new user.
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      user_id:
+        type: integer
+      user_name:
+        type: string
+    type: object
+host: localhost:8443
 info:
   contact:
     email: support@example.com
@@ -448,7 +457,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.ListUserResponse'
+            $ref: '#/definitions/handlers.UserInfoResponse'
         "400":
           description: Bad Request
           schema:
@@ -475,11 +484,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: User registered successfully
+          description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.UserInfoResponse'
         "400":
           description: Invalid input or missing fields
           schema:
@@ -495,13 +502,13 @@ paths:
       summary: Register a new user
       tags:
       - users
-  /users/{username}:
+  /users/{id}:
     delete:
       description: Delete an existing user account (admin only)
       parameters:
-      - description: Username to delete
+      - description: UserId to delete
         in: path
-        name: username
+        name: id
         required: true
         type: string
       produces:
@@ -514,7 +521,7 @@ paths:
               type: string
             type: object
         "400":
-          description: Username is required
+          description: UserId is required
           schema:
             additionalProperties:
               type: string
@@ -532,6 +539,52 @@ paths:
               type: string
             type: object
       summary: Delete a user
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Update the password of an existing user (admin only)
+      parameters:
+      - description: UserId to update
+        in: path
+        name: username
+        required: true
+        type: string
+      - description: Password update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User password updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input or missing fields
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Failed to update user password
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user password
       tags:
       - users
   /users/{username}/role:

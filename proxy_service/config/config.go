@@ -14,6 +14,11 @@ var (
 	// TLSPath is used for read TLS files from that path.
 	TLSPath string
 
+    CertPath string
+    KeyPath string
+    HttpsAddr string
+    CaFile string
+
 	// SecretKey is used for signing JWT tokens.
 	SecretKey string
 
@@ -96,5 +101,14 @@ func LoadConfig() {
 	DatabaseName = os.Getenv("DB_NAME")
 	if DatabaseName == "" {
 		log.Fatal("DB_NAME is not set in .env file")
+	}
+
+    CertPath = os.Getenv("TLS_CERT_PATH")
+	KeyPath = os.Getenv("TLS_KEY_PATH")
+	HttpsAddr = os.Getenv("HTTPS_ADDR")
+    CaFile = os.Getenv("TLS_CA_PATH")
+
+    if CertPath == "" || KeyPath == "" || HttpsAddr == "" || CaFile == "" {
+        log.Fatal("TLS env variables are not fully set")
 	}
 }
