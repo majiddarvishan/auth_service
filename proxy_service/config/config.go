@@ -103,9 +103,9 @@ func LoadConfig() {
 		log.Fatal("DB_NAME is not set in .env file")
 	}
 
+	HttpsAddr = os.Getenv("HTTPS_ADDR")
     CertPath = os.Getenv("TLS_CERT_PATH")
 	KeyPath = os.Getenv("TLS_KEY_PATH")
-	HttpsAddr = os.Getenv("HTTPS_ADDR")
     CaFile = os.Getenv("TLS_CA_PATH")
 
     if CertPath == "" || KeyPath == "" || HttpsAddr == "" || CaFile == "" {

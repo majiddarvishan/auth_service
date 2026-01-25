@@ -96,6 +96,10 @@ func (m *MockStore) GetUserAndRoleByUsername(username string) (*User, error) {
 	return nil, errors.New("user not found")
 }
 
+func (m *MockStore) UpdateUserPassword(userId uint, password string) error {
+return nil
+}
+
 func (m *MockStore) UpdateUserRoleByUsername(username, roleName string) error {
 	return nil
 }

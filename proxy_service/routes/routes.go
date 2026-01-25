@@ -116,7 +116,7 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		handlers.CreateCustomEndpointHandler(dynamicGroup),
 	)
 
-    rootGroup.DELETE("/admin/custom-endpoints",
+	rootGroup.DELETE("/admin/custom-endpoints",
 		middleware.AuthMiddleware,
 		middleware.RoleMiddleware("admin"),
 		handlers.DeleteCustomEndpointHandler(dynamicGroup),
@@ -129,13 +129,13 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	rootGroup.POST("/users",
 		// middleware.AuthMiddleware,          // Ensure the request is authenticated.
 		// middleware.RoleMiddleware("admin"), // Ensure the requester is an admin.
-		handlers.RegisterHandler,           // Handler to create a new user.
+		handlers.RegisterHandler, // Handler to create a new user.
 	)
 
-    rootGroup.GET("/users",
+	rootGroup.GET("/users",
 		// middleware.AuthMiddleware,          // Ensure the request is authenticated.
 		// middleware.RoleMiddleware("admin"), // Ensure the requester is an admin.
-		handlers.ListUserHandler,           // Handler to get users.
+		handlers.ListUserHandler, // Handler to get users.
 	)
 
 	// DELETE User Endpoint (Admin Only)
@@ -143,6 +143,13 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 		// middleware.AuthMiddleware,
 		// middleware.RoleMiddleware("admin"),
 		handlers.DeleteUserHandler,
+	)
+
+	// PATCH Users Endpoint (Admin Only)
+	rootGroup.PATCH("/users/:id",
+		// middleware.AuthMiddleware,
+		// middleware.RoleMiddleware("admin"),
+		handlers.UpdateUserPasswordHandler,
 	)
 
 	// Update User Role (Admin Only)
@@ -174,13 +181,11 @@ func SetupRoutes(httpAddr, httpsAddr string) {
 	// if err := httpsRouter.RunTLS(httpsAddr, "cert.pem", "key.pem"); err != nil {
 	// if err := httpsRouter.RunTLS(httpsAddr, "localhost.pem", "localhost-key.pem"); err != nil {
 	// if err := httpsRouter.RunTLS(httpsAddr, config.TLSPath+"/localhost.pem", config.TLSPath+"/localhost-key.pem"); err != nil {
-    // if err := httpsRouter.RunTLS(config.HttpsAddr, config.CertPath, config.KeyPath); err != nil {
+	// if err := httpsRouter.RunTLS(config.HttpsAddr, config.CertPath, config.KeyPath); err != nil {
 	// 	log.Fatal("Failed to start HTTPS server:", err)
 	// }
 
-
-
-    // Load CA
+	// Load CA
 	caCert, err := ioutil.ReadFile(config.CaFile)
 	if err != nil {
 		log.Fatalf("Failed to read CA file: %v", err)

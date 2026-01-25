@@ -19,6 +19,8 @@ type Store interface {
 	GetUserAndRoleByUsername(username string) (*User, error)
 	UpdateUserRoleByUsername(username, roleName string) error
 
+    UpdateUserPassword(userId uint, password string) error
+
     GetUserPhones(userName string) ([]string, error)
     AddPhoneForUser(username string, phones []string) error
 

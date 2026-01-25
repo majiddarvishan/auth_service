@@ -395,34 +395,29 @@ type UpdatePasswordRequest struct {
 // @Router       /users/{id} [patch]
 func UpdateUserPasswordHandler(c *gin.Context) {
     // Get the user_id from the URL parameter.
-	userId := c.Param("id")
-	if userId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
-		return
-	}
+        userId := c.Param("id")
+        if userId == "" {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "id is required"})
+                return
+        }
 
     id, err := proxy.ToInt(userId)
     if err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "id must be integer"})
-		return
+                return
     }
 
     var req UpdatePasswordRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
-		return
-	}
+        if err := c.ShouldBindJSON(&req); err != nil {
+                c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
+                return
+        }
 
-	if req.Role == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Role is required"})
-		return
-	}
+        err = database.DB.UpdateUserPassword(uint(id), req.Password)
+        if err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role", "details": err.Error()})
+                return
+        }
 
-	err := database.DB.UpdateUserRoleByUsername(username, req.Role)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user role", "details": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User role updated successfully"})
+        c.JSON(http.StatusOK, gin.H{"message": "User password updated successfully"})
 }

@@ -40,7 +40,7 @@ func (s *PGStore) Init() error {
 }
 
 func (s *PGStore) CreateUser(u *User) error {
-    return s.db.Create(u).Error
+	return s.db.Create(u).Error
 }
 
 func (s *PGStore) GetUserByID(id uint) (*User, error) {
@@ -88,6 +88,21 @@ func (s *PGStore) UpdateUserRoleByUsername(username, roleName string) error {
 	user.RoleID = role.ID
 
 	if err := s.db.Save(&user).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *PGStore) UpdateUserPassword(userId uint, password string) error {
+	var u User
+	if err := s.db.First(&u, userId).Error; err != nil {
+		return err
+	}
+
+	u.Password = password
+
+	if err := s.db.Save(&u).Error; err != nil {
 		return err
 	}
 
@@ -279,6 +294,6 @@ func (s *PGStore) DeleteCustomEndpoint(id uint) error {
 }
 
 func (s *PGStore) DeleteCustomEndpointByPath(path string) error {
-    // permanently delete the row
-	return  s.db.Unscoped().Where("path = ?", path).Delete(&CustomEndpoint{}).Error
+	// permanently delete the row
+	return s.db.Unscoped().Where("path = ?", path).Delete(&CustomEndpoint{}).Error
 }
